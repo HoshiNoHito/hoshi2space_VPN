@@ -1,0 +1,19 @@
+[Unit]
+Description=hoshi2space VPN site (FastAPI)
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+WorkingDirectory=/home/deploy/vpn-site
+EnvironmentFile=/home/deploy/vpn-site/.env
+ExecStart=/home/deploy/vpn-site/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=on-failure
+RestartSec=5
+
+# Небольшая защита по памяти на случай утечки — процесс перезапустится сам,
+# а не утащит за собой весь сервер при 1 ГБ RAM.
+MemoryMax=300M
+
+[Install]
+WantedBy=multi-user.target

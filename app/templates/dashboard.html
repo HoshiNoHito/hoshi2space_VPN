@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Личный кабинет{% endblock %}
+{% block content %}
+<h2>Личный кабинет</h2>
+<p>Email: {{ user.email }}</p>
+<p>Тариф: <strong>{{ plan_name or "не назначен" }}</strong>
+    {% if expires_at %} · действует до {{ expires_at.strftime("%d.%m.%Y") }}{% endif %}
+</p>
+
+<h3>Ваши подключения</h3>
+{% if not connections %}
+    <p>Пока нет активных подключений. Обратитесь в поддержку, если это неожиданно.</p>
+{% endif %}
+
+{% for conn in connections %}
+<div class="conn-card">
+    <h4>{{ conn.protocol | upper }}</h4>
+    <code>{{ conn.link }}</code>
+    {% if conn.traffic.error %}
+        <p class="error">{{ conn.traffic.error }}</p>
+    {% else %}
+        <p>Трафик: {{ conn.traffic }}</p>
+    {% endif %}
+</div>
+{% endfor %}
+{% endblock %}
