@@ -1,0 +1,14 @@
+# подтягиваем актуальные данные с гитхаба:
+sudo -u deploy git -C /home/deploy/vpn-site fetch
+
+# проверяем критичные файлы между тем, что находится на сервере и что лежит в репозитории:
+sudo -u deploy git -C /home/deploy/vpn-site diff origin/main -- название_файла.расширение
+
+# обновление на сервере
+sudo -u deploy git -C /home/deploy/vpn-site pull
+
+# перезапуск сайта (только в случае изменения .py-скриптов. Для обновления .html/.css не нужен)
+sudo systemctl restart vpnsite
+
+# запрос статуса сайта после перезапуска (убедиться, что active):
+sudo systemctl status vpnsite
