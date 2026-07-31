@@ -9,7 +9,15 @@
 <body>
     <header class="nav">
         <a href="/" class="logo">hoshi2space</a>
-        <nav>
+
+        <nav class="nav-center">
+            <a href="/">hoshi2space</a>
+            <a href="/news">Новости</a>
+            <a href="/downloads">Скачать</a>
+            <a href="/faq">FAQ</a>
+        </nav>
+
+        <nav class="nav-right">
             {% if request.session.get('user_id') %}
                 <a href="/dashboard">Личный кабинет</a>
                 <a href="/logout">Выйти</a>
