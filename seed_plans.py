@@ -14,9 +14,9 @@ Base.metadata.create_all(bind=engine)
 db = SessionLocal()
 
 plans = [
-    {"name": "Lite", "price_rub": 0, "inbound_ids": [1]},
-    {"name": "Standart", "price_rub": 0, "inbound_ids": [1, 2]},
-    {"name": "MAX", "price_rub": 0, "inbound_ids": [1, 2, 3]},
+    {"name": "Lite", "price_rub": 150, "inbound_ids": [1]},
+    {"name": "Standart", "price_rub": 250, "inbound_ids": [1, 4]},
+    {"name": "MAX", "price_rub": 400, "inbound_ids": [1, 4},
 ]
 
 for p in plans:
