@@ -8,19 +8,23 @@
 </p>
 
 <h3>Ваши подключения</h3>
-{% if not connections %}
+{% if not links %}
     <p>Пока нет активных подключений. Обратитесь в поддержку, если это неожиданно.</p>
 {% endif %}
 
-{% for conn in connections %}
+{% for link in links %}
 <div class="conn-card">
-    <h4>{{ conn.protocol | upper }}</h4>
-    <code>{{ conn.link }}</code>
-    {% if conn.traffic.error %}
-        <p class="error">{{ conn.traffic.error }}</p>
-    {% else %}
-        <p>Трафик: {{ conn.traffic }}</p>
-    {% endif %}
+    <code>{{ link }}</code>
+    <img src="/dashboard/qr?index={{ loop.index0 }}" alt="QR-код" width="160" height="160">
 </div>
 {% endfor %}
+
+{% if traffic %}
+<h3>Статистика</h3>
+{% if traffic.error %}
+    <p class="error">{{ traffic.error }}</p>
+{% else %}
+    <p>{{ traffic }}</p>
+{% endif %}
+{% endif %}
 {% endblock %}
