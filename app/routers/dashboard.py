@@ -1,4 +1,3 @@
-import base64
 import io
 
 import qrcode
@@ -9,56 +8,27 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import get_current_user
-from app.models import User, UserClient
+from app.models import User
 from app.xui_client import xui_client
-from app.config import settings
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 
-def build_client_link(uc: UserClient) -> str:
-    """
-    Строит ссылку-конфиг для клиента.
-    Для VLESS собираем стандартную vless:// ссылку.
-    Для остальных протоколов (Hysteria и т.д.) формат сильно отличается —
-    здесь нужно будет доработать под конкретные параметры твоего inbound'а
-    (порт, obfs, sni и т.д. из настроек 3x-ui).
-    """
-    address = settings.public_server_address
-
-    if uc.protocol == "vless":
-        # Пример базовой ссылки для VLESS-Reality — параметры security/pbk/sid/sni
-        # нужно подставить реальные из настроек твоего inbound'а в 3x-ui.
-        return (
-            f"vless://{uc.client_uuid}@{address}:443"
-            f"?type=tcp&security=reality&flow=xtls-rprx-vision"
-            f"#{uc.client_identifier}"
-        )
-
-    # Заглушка для остальных протоколов — доработать по мере добавления
-    return f"# Конфиг для протокола {uc.protocol} нужно донастроить"
-
-
 @router.get("/dashboard")
 def dashboard(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    clients = db.query(UserClient).filter(UserClient.user_id == user.id).all()
+    links: list[str] = []
+    traffic = {}
 
-    connections = []
-    for uc in clients:
-        traffic = {}
+    if user.client:
         try:
-            traffic = xui_client.get_client_traffic(uc.client_identifier)
+            links = xui_client.get_client_links(user.client.xui_email)
         except Exception:
-            # Панель может быть временно недоступна — не роняем страницу целиком
+            links = []
+        try:
+            traffic = xui_client.get_client_traffic(user.client.xui_email)
+        except Exception:
             traffic = {"error": "не удалось получить статистику"}
-
-        connections.append({
-            "protocol": uc.protocol,
-            "link": build_client_link(uc),
-            "identifier": uc.client_identifier,
-            "traffic": traffic,
-        })
 
     plan_name = None
     expires_at = None
@@ -73,20 +43,24 @@ def dashboard(request: Request, user: User = Depends(get_current_user), db: Sess
             "user": user,
             "plan_name": plan_name,
             "expires_at": expires_at,
-            "connections": connections,
+            "links": links,
+            "traffic": traffic,
         },
     )
 
 
-@router.get("/dashboard/qr/{client_id}")
-def client_qr(client_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    uc = db.query(UserClient).filter(
-        UserClient.id == client_id, UserClient.user_id == user.id
-    ).first()
-    if not uc:
+@router.get("/dashboard/qr")
+def client_qr(index: int = 0, user: User = Depends(get_current_user)):
+    """QR-код для конкретной ссылки по её индексу в списке (см. /dashboard)."""
+    if not user.client:
         return StreamingResponse(io.BytesIO(b""), media_type="image/png")
 
-    link = build_client_link(uc)
+    try:
+        links = xui_client.get_client_links(user.client.xui_email)
+        link = links[index]
+    except Exception:
+        return StreamingResponse(io.BytesIO(b""), media_type="image/png")
+
     img = qrcode.make(link)
     buf = io.BytesIO()
     img.save(buf, format="PNG")

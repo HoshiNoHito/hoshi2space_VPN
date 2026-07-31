@@ -4,8 +4,9 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import User, Plan, UserSubscription
+from app.models import User, Plan, UserSubscription, UserClient
 from app.security import hash_password, verify_password
+from app.xui_client import xui_client
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -43,6 +44,17 @@ def register(
         sub = UserSubscription(user_id=user.id, plan_id=default_plan.id, is_active=True)
         db.add(sub)
         db.commit()
+
+        # Создаём клиента в 3x-ui сразу по всем inbound'ам тарифа одним вызовом
+        try:
+            xui_client.add_client(email=user.email, inbound_ids=default_plan.inbound_ids)
+            db.add(UserClient(user_id=user.id, xui_email=user.email))
+            db.commit()
+        except Exception:
+            # Панель может быть временно недоступна — не роняем регистрацию.
+            # Пользователь попадёт в кабинет без подключений, это будет видно
+            # и можно будет донастроить вручную/повторить позже.
+            pass
 
     request.session["user_id"] = user.id
     return RedirectResponse(url="/dashboard", status_code=303)
