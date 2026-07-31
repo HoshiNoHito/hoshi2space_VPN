@@ -1,14 +1,12 @@
 """
-Тонкая обёртка над API 3x-ui.
+Обёртка над API 3x-ui — под реальную версию панели пользователя.
 
-ВАЖНО: пути эндпоинтов ниже соответствуют стандартной структуре 3x-ui API
-(login, panel/api/inbounds/*), но могут отличаться в зависимости от версии
-твоей панели. Перед первым запуском в продакшене сверься со Swagger-докой
-твоей панели: <URL_ПАНЕЛИ>/panel/api-docs — и поправь пути при расхождении.
+Аутентификация: Bearer API-токен (XUI_API_TOKEN в .env) — согласно
+документации панели, это отключает необходимость в CSRF-токене,
+который нужен только для cookie-based сессий браузера.
 
-Аутентификация поддерживает два режима:
-- логин/пароль -> сессионная cookie (используется по умолчанию)
-- Bearer API-токен, если он задан в настройках (XUI_API_TOKEN)
+Базовый URL панели ДОЛЖЕН включать секретный путь-префикс, например:
+    XUI_PANEL_URL=https://admin.hoshi2space.ru:33029/wSFpgdeB06LWJIXhVr/
 """
 
 import httpx
@@ -18,79 +16,79 @@ from app.config import settings
 
 class XUIClient:
     def __init__(self):
-        self.base_url = settings.xui_panel_url.rstrip("/")
+        # Обязательно с "/" на конце — чтобы относительные пути ниже
+        # (без ведущего "/") корректно приклеивались после префикса панели
+        base = settings.xui_panel_url
+        self.base_url = base if base.endswith("/") else base + "/"
         self._client: httpx.Client | None = None
 
     def _get_client(self) -> httpx.Client:
         if self._client is not None:
             return self._client
 
-        headers = {}
-        if settings.xui_api_token:
-            headers["Authorization"] = f"Bearer {settings.xui_api_token}"
+        headers = {"Authorization": f"Bearer {settings.xui_api_token}"}
+        self._client = httpx.Client(base_url=self.base_url, headers=headers, timeout=10.0)
+        return self._client
 
-        # verify=False пригодится, если у панели самоподписанный сертификат
-        # на внутреннем адресе — поправь на True, если сертификат валидный.
-        client = httpx.Client(base_url=self.base_url, headers=headers, timeout=10.0)
-
-        if not settings.xui_api_token:
-            # логинимся по логину/паролю, cookie сохранится в client automatically
-            resp = client.post(
-                "/login",
-                data={"username": settings.xui_username, "password": settings.xui_password},
-            )
-            resp.raise_for_status()
-
-        self._client = client
-        return client
-
-    def list_inbounds(self) -> list[dict]:
-        client = self._get_client()
-        resp = client.get("/panel/api/inbounds/list")
-        resp.raise_for_status()
-        return resp.json().get("obj", [])
-
-    def add_client(self, inbound_id: int, email: str, client_uuid: str,
-                    expiry_time_ms: int = 0, total_gb: int = 0) -> dict:
+    def add_client(
+        self,
+        email: str,
+        inbound_ids: list[int],
+        expiry_time_ms: int = 0,
+        total_gb: int = 0,
+        limit_ip: int = 0,
+    ) -> dict:
         """
-        Добавляет клиента в указанный inbound.
-        Структура `settings` (JSON-строка) зависит от протокола inbound'а —
-        для vless/vmess нужен client с id (uuid); для hysteria и других
-        протоколов поля отличаются. Проверь актуальный формат через
-        "Inspect -> Network" в браузере при ручном добавлении клиента в панели,
-        как рекомендует официальная документация 3x-ui.
+        Создаёт клиента и привязывает его сразу ко всем inbound_ids
+        (по документации — так и задумано, один вызов на весь тариф).
+        UUID/password/auth не передаём — панель генерирует их сама.
         """
         client = self._get_client()
         payload = {
-            "id": inbound_id,
-            "settings": {
-                "clients": [
-                    {
-                        "id": client_uuid,
-                        "email": email,
-                        "enable": True,
-                        "expiryTime": expiry_time_ms,
-                        "totalGB": total_gb,
-                    }
-                ]
+            "client": {
+                "email": email,
+                "enable": True,
+                "expiryTime": expiry_time_ms,
+                "totalGB": total_gb,
+                "limitIp": limit_ip,
+                "flow": "",
+                "security": "auto",
+                "comment": "",
+                "group": "",
+                "tgId": 0,
+                "reset": 0,
             },
+            "inboundIds": inbound_ids,
         }
-        resp = client.post("/panel/api/inbounds/addClient", json=payload)
+        resp = client.post("panel/api/clients/add", json=payload)
         resp.raise_for_status()
         return resp.json()
+
+    def get_client_links(self, email: str) -> list[str]:
+        """
+        Возвращает готовые ссылки-конфиги (vless://, hysteria:// и т.д.)
+        для клиента по всем его inbound'ам — те же строки, что в кнопке
+        "Copy URL" панели. Собирать вручную ничего не нужно.
+        """
+        client = self._get_client()
+        resp = client.get(f"panel/api/clients/links/{email}")
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("obj", data) if isinstance(data, dict) else data
 
     def get_client_traffic(self, email: str) -> dict:
         client = self._get_client()
-        resp = client.get(f"/panel/api/inbounds/getClientTraffics/{email}")
+        resp = client.get(f"panel/api/clients/traffic/{email}")
         resp.raise_for_status()
         return resp.json().get("obj", {})
 
-    def delete_client(self, inbound_id: int, client_uuid: str) -> dict:
+    def delete_client(self, email: str, keep_traffic: bool = False) -> dict:
         client = self._get_client()
-        resp = client.post(f"/panel/api/inbounds/{inbound_id}/delClient/{client_uuid}")
+        params = {"keepTraffic": "1"} if keep_traffic else {}
+        resp = client.post(f"panel/api/clients/del/{email}", params=params)
         resp.raise_for_status()
         return resp.json()
 
 
-# Единственный инстанс на всё приложение — переиспользует TCP-соединение и cookie
+# Единственный инстанс на всё приложение — переиспользует TCP-соединение
 xui_client = XUIClient()
