@@ -16,7 +16,7 @@ db = SessionLocal()
 plans = [
     {"name": "Lite", "price_rub": 200, "inbound_ids": [1]},
     {"name": "Standart", "price_rub": 350, "inbound_ids": [1, 4]},
-    {"name": "MAX", "price_rub": 500, "inbound_ids": [1, 4},
+    {"name": "MAX", "price_rub": 500, "inbound_ids": [1, 4]},
 ]
 
 for p in plans:
