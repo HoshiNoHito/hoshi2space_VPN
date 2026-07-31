@@ -20,7 +20,7 @@ class User(Base):
     subscription = relationship(
         "UserSubscription", back_populates="user", uselist=False
     )
-    clients = relationship("UserClient", back_populates="user")
+    client = relationship("UserClient", back_populates="user", uselist=False)
 
 
 class Plan(Base):
@@ -53,18 +53,16 @@ class UserSubscription(Base):
 
 class UserClient(Base):
     """
-    Привязка: у какого пользователя какой клиент создан в каком inbound'е 3x-ui.
-    client_identifier — это email/UUID, под которым клиент создан в 3x-ui
-    (используется для запроса трафика через getClientTraffics).
+    Привязка пользователя к его клиенту в 3x-ui.
+    Один клиент (email) может быть прикреплён сразу к нескольким inbound'ам
+    (согласно тарифу) — панель обрабатывает это одним вызовом /clients/add,
+    поэтому здесь достаточно одной строки на пользователя.
     """
     __tablename__ = "user_clients"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    inbound_id = Column(Integer, nullable=False)
-    protocol = Column(String, nullable=False)  # vless / hysteria / ...
-    client_identifier = Column(String, nullable=False)  # email в 3x-ui
-    client_uuid = Column(String, nullable=True)  # uuid клиента (для vless/vmess)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    xui_email = Column(String, nullable=False)  # email клиента в 3x-ui
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-    user = relationship("User", back_populates="clients")
+    user = relationship("User", back_populates="client")
