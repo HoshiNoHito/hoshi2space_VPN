@@ -20,3 +20,9 @@ def get_current_user_optional(request: Request, db: Session = Depends(get_db)) -
     if not user_id:
         return None
     return db.query(User).filter(User.id == user_id).first()
+
+
+def get_current_admin(user: User = Depends(get_current_user)) -> User:
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Доступ запрещён")
+    return user

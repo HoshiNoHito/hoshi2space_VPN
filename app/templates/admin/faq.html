@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+<h2>FAQ</h2>
+
+<div class="db-card">
+    <h3>Добавить вопрос</h3>
+    <form method="post" action="/admin/faq/create">
+        <label>Вопрос</label>
+        <input type="text" name="question" required>
+        <label>Ответ</label>
+        <textarea name="answer" rows="4" required></textarea>
+        <label>Порядок отображения (меньше — выше)</label>
+        <input type="number" name="sort_order" value="0">
+        <button type="submit">Добавить</button>
+    </form>
+</div>
+
+{% for item in items %}
+<div class="db-card">
+    <details>
+        <summary><strong>{{ item.question }}</strong></summary>
+        <form method="post" action="/admin/faq/{{ item.id }}/update" style="margin-top: 16px;">
+            <label>Вопрос</label>
+            <input type="text" name="question" value="{{ item.question }}" required>
+            <label>Ответ</label>
+            <textarea name="answer" rows="4" required>{{ item.answer }}</textarea>
+            <label>Порядок отображения</label>
+            <input type="number" name="sort_order" value="{{ item.sort_order }}">
+            <button type="submit">Сохранить</button>
+        </form>
+        <form method="post" action="/admin/faq/{{ item.id }}/delete" onsubmit="return confirm('Удалить?')">
+            <button type="submit" class="btn-danger">Удалить</button>
+        </form>
+    </details>
+</div>
+{% endfor %}
+{% endblock %}

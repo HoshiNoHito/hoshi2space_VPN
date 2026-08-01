@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from sqlalchemy import func
@@ -10,9 +9,9 @@ from app.models import User, Plan, UserSubscription, UserClient
 from app.security import hash_password, verify_password
 from app.validators import validate_nickname, validate_password
 from app.xui_client import xui_client
+from app.templates_env import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 DEFAULT_PLAN_NAME = "Lite"  # тариф по умолчанию при регистрации (пока без оплаты)
 

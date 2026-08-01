@@ -2,6 +2,16 @@
 {% block title %}Скачать — hoshi2space{% endblock %}
 {% block content %}
 <h2>Скачать</h2>
-<p>Здесь появятся дистрибутивы популярных VPN-клиентов с краткими инструкциями по настройке и подключению.</p>
+
+{% if not items %}
 <p>Раздел пока в разработке — загляните позже.</p>
+{% endif %}
+
+{% for item in items %}
+<div class="db-card">
+    <h3>{{ item.title }}</h3>
+    <p style="white-space: pre-wrap;">{{ item.description }}</p>
+    <a href="{{ item.download_url }}" class="cta" target="_blank" rel="noopener">Скачать</a>
+</div>
+{% endfor %}
 {% endblock %}

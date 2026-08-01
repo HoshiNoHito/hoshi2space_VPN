@@ -2,6 +2,16 @@
 {% block title %}Новости — hoshi2space{% endblock %}
 {% block content %}
 <h2>Новости</h2>
-<p>Здесь будут появляться новости о работе сервиса: плановые технические работы, временная недоступность и другие важные объявления.</p>
+
+{% if not posts %}
 <p>Пока новостей нет — загляните позже.</p>
+{% endif %}
+
+{% for post in posts %}
+<div class="db-card">
+    <h3>{{ post.title }}</h3>
+    <p class="db-muted">{{ post.created_at.strftime("%d.%m.%Y %H:%M") }}</p>
+    <p style="white-space: pre-wrap;">{{ post.content }}</p>
+</div>
+{% endfor %}
 {% endblock %}

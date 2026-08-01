@@ -3,7 +3,6 @@ import io
 import qrcode
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import StreamingResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -13,9 +12,9 @@ from app.deps import get_current_user
 from app.models import User, Plan, UserSubscription, UserClient
 from app.validators import validate_nickname
 from app.xui_client import xui_client
+from app.templates_env import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 
 def get_traffic_summary(user: User) -> dict:

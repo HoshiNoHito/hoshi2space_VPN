@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Request
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Request, Depends
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import NewsPost, DownloadItem, FaqItem
+from app.templates_env import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/")
@@ -11,15 +14,18 @@ def index(request: Request):
 
 
 @router.get("/news")
-def news(request: Request):
-    return templates.TemplateResponse("news.html", {"request": request})
+def news(request: Request, db: Session = Depends(get_db)):
+    posts = db.query(NewsPost).order_by(NewsPost.created_at.desc()).all()
+    return templates.TemplateResponse("news.html", {"request": request, "posts": posts})
 
 
 @router.get("/downloads")
-def downloads(request: Request):
-    return templates.TemplateResponse("downloads.html", {"request": request})
+def downloads(request: Request, db: Session = Depends(get_db)):
+    items = db.query(DownloadItem).order_by(DownloadItem.sort_order, DownloadItem.id).all()
+    return templates.TemplateResponse("downloads.html", {"request": request, "items": items})
 
 
 @router.get("/faq")
-def faq(request: Request):
-    return templates.TemplateResponse("faq.html", {"request": request})
+def faq(request: Request, db: Session = Depends(get_db)):
+    items = db.query(FaqItem).order_by(FaqItem.sort_order, FaqItem.id).all()
+    return templates.TemplateResponse("faq.html", {"request": request, "items": items})

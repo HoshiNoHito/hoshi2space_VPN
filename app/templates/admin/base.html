@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="db-layout">
+    <button class="db-mobile-toggle" onclick="document.querySelector('.db-sidebar').classList.toggle('open')">☰ Меню</button>
+
+    <aside class="db-sidebar">
+        <div class="db-nickname">Админка</div>
+        <nav class="db-nav">
+            <a href="/admin" class="{{ 'active' if active == 'home' }}">Обзор</a>
+            <a href="/admin/news" class="{{ 'active' if active == 'news' }}">Новости</a>
+            <a href="/admin/downloads" class="{{ 'active' if active == 'downloads' }}">Скачать</a>
+            <a href="/admin/faq" class="{{ 'active' if active == 'faq' }}">FAQ</a>
+        </nav>
+    </aside>
+
+    <section class="db-content">
+        {% block admin_content %}{% endblock %}
+    </section>
+</div>
+{% endblock %}

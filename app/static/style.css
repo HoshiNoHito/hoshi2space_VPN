@@ -101,7 +101,7 @@ form {
 
 label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.9rem; }
 
-input {
+input, textarea {
     width: 100%;
     padding: 10px 12px;
     margin-bottom: 16px;
@@ -109,6 +109,7 @@ input {
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text);
+    font-family: inherit;
 }
 
 button {
@@ -381,3 +382,6 @@ footer {
         color: var(--text);
     }
 }
+
+.faq-item summary { cursor: pointer; font-weight: 600; }
+.faq-item summary:hover { color: var(--accent); }

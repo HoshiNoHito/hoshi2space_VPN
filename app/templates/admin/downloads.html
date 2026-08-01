@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+<h2>Скачать</h2>
+
+<div class="db-card">
+    <h3>Добавить файл/клиент</h3>
+    <form method="post" action="/admin/downloads/create">
+        <label>Название</label>
+        <input type="text" name="title" required>
+        <label>Описание / инструкция</label>
+        <textarea name="description" rows="4" required></textarea>
+        <label>Ссылка на скачивание</label>
+        <input type="url" name="download_url" required>
+        <label>Порядок отображения (меньше — выше)</label>
+        <input type="number" name="sort_order" value="0">
+        <button type="submit">Добавить</button>
+    </form>
+</div>
+
+{% for item in items %}
+<div class="db-card">
+    <details>
+        <summary><strong>{{ item.title }}</strong></summary>
+        <form method="post" action="/admin/downloads/{{ item.id }}/update" style="margin-top: 16px;">
+            <label>Название</label>
+            <input type="text" name="title" value="{{ item.title }}" required>
+            <label>Описание / инструкция</label>
+            <textarea name="description" rows="4" required>{{ item.description }}</textarea>
+            <label>Ссылка на скачивание</label>
+            <input type="url" name="download_url" value="{{ item.download_url }}" required>
+            <label>Порядок отображения</label>
+            <input type="number" name="sort_order" value="{{ item.sort_order }}">
+            <button type="submit">Сохранить</button>
+        </form>
+        <form method="post" action="/admin/downloads/{{ item.id }}/delete" onsubmit="return confirm('Удалить?')">
+            <button type="submit" class="btn-danger">Удалить</button>
+        </form>
+    </details>
+</div>
+{% endfor %}
+{% endblock %}

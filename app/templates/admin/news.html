@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+<h2>Новости</h2>
+
+<div class="db-card">
+    <h3>Добавить новость</h3>
+    <form method="post" action="/admin/news/create">
+        <label for="title">Заголовок</label>
+        <input type="text" id="title" name="title" required>
+
+        <label for="content">Текст</label>
+        <textarea id="content" name="content" rows="6" required></textarea>
+
+        <button type="submit">Опубликовать</button>
+    </form>
+</div>
+
+{% for post in posts %}
+<div class="db-card">
+    <details>
+        <summary><strong>{{ post.title }}</strong> — {{ post.created_at.strftime("%d.%m.%Y %H:%M") }}</summary>
+        <form method="post" action="/admin/news/{{ post.id }}/update" style="margin-top: 16px;">
+            <label>Заголовок</label>
+            <input type="text" name="title" value="{{ post.title }}" required>
+            <label>Текст</label>
+            <textarea name="content" rows="6" required>{{ post.content }}</textarea>
+            <button type="submit">Сохранить</button>
+        </form>
+        <form method="post" action="/admin/news/{{ post.id }}/delete" onsubmit="return confirm('Удалить эту новость?')">
+            <button type="submit" class="btn-danger">Удалить</button>
+        </form>
+    </details>
+</div>
+{% endfor %}
+{% endblock %}

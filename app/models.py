@@ -70,3 +70,31 @@ class UserClient(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship("User", back_populates="client")
+
+
+class NewsPost(Base):
+    __tablename__ = "news_posts"
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String, nullable=False)
+    content = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class DownloadItem(Base):
+    __tablename__ = "download_items"
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    download_url = Column(String, nullable=False)
+    sort_order = Column(Integer, default=0)
+
+
+class FaqItem(Base):
+    __tablename__ = "faq_items"
+
+    id = Column(Integer, primary_key=True)
+    question = Column(String, nullable=False)
+    answer = Column(String, nullable=False)
+    sort_order = Column(Integer, default=0)

@@ -19,6 +19,9 @@
 
         <nav class="nav-right">
             {% if request.session.get('user_id') %}
+                {% if is_admin_request(request) %}
+                    <a href="/admin">Админка</a>
+                {% endif %}
                 <a href="/dashboard">Личный кабинет</a>
                 <a href="/logout">Выйти</a>
             {% else %}

@@ -2,6 +2,15 @@
 {% block title %}FAQ — hoshi2space{% endblock %}
 {% block content %}
 <h2>FAQ</h2>
-<p>Здесь появятся ответы на часто задаваемые вопросы.</p>
+
+{% if not items %}
 <p>Раздел пока в разработке — загляните позже.</p>
+{% endif %}
+
+{% for item in items %}
+<details class="db-card faq-item">
+    <summary>{{ item.question }}</summary>
+    <p style="white-space: pre-wrap; margin-top: 12px;">{{ item.answer }}</p>
+</details>
+{% endfor %}
 {% endblock %}
