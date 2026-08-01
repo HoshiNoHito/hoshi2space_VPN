@@ -82,6 +82,24 @@ class XUIClient:
         resp.raise_for_status()
         return resp.json().get("obj", {})
 
+    def attach_inbounds(self, email: str, inbound_ids: list[int]) -> dict:
+        """Прикрепляет существующего клиента к дополнительным inbound'ам."""
+        if not inbound_ids:
+            return {"success": True}
+        client = self._get_client()
+        resp = client.post(f"panel/api/clients/{email}/attach", json={"inboundIds": inbound_ids})
+        resp.raise_for_status()
+        return resp.json()
+
+    def detach_inbounds(self, email: str, inbound_ids: list[int]) -> dict:
+        """Открепляет клиента от указанных inbound'ов, не удаляя самого клиента."""
+        if not inbound_ids:
+            return {"success": True}
+        client = self._get_client()
+        resp = client.post(f"panel/api/clients/{email}/detach", json={"inboundIds": inbound_ids})
+        resp.raise_for_status()
+        return resp.json()
+
     def delete_client(self, email: str, keep_traffic: bool = False) -> dict:
         client = self._get_client()
         params = {"keepTraffic": "1"} if keep_traffic else {}

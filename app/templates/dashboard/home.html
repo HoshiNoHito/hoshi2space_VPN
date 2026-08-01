@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% block db_content %}
+<h2>Привет, {{ user.nickname }}!</h2>
+
+<div class="db-card">
+    <p>Тариф: <strong>{{ plan_name or "не активен" }}</strong></p>
+
+    {% if traffic.total_bytes is defined and traffic.total_bytes > 0 %}
+        <div class="traffic-bar">
+            <div class="traffic-bar-fill" style="width: {{ traffic.percent }}%"></div>
+        </div>
+        <p class="traffic-label">Использовано {{ (traffic.used_bytes / 1073741824) | round(2) }} ГБ из {{ (traffic.total_bytes / 1073741824) | round(2) }} ГБ</p>
+    {% elif traffic.used_bytes is defined %}
+        <p class="traffic-label">Использовано {{ (traffic.used_bytes / 1073741824) | round(2) }} ГБ · безлимитный тариф</p>
+    {% else %}
+        <p class="traffic-label">Статистика пока недоступна</p>
+    {% endif %}
+</div>
+
+<a href="/dashboard/keys" class="cta cta-big">Подключиться к VPN</a>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "dashboard/base.html" %}
+{% block db_content %}
+<h2>Ключи подключения</h2>
+
+{% if not links %}
+<div class="db-card"><p>Пока нет активных подключений. Проверьте раздел "Тариф" или обратитесь в поддержку.</p></div>
+{% endif %}
+
+{% for link in links %}
+<div class="db-card key-card">
+    <div class="key-row">
+        <div class="key-qr-wrap blurred" onclick="this.classList.remove('blurred')">
+            <img src="/dashboard/qr?index={{ loop.index0 }}" alt="QR-код" width="160" height="160">
+            <div class="reveal-hint">Нажмите, чтобы показать</div>
+        </div>
+
+        <div class="key-text-wrap">
+            <div class="key-text blurred" onclick="this.classList.remove('blurred')">
+                <code>{{ link }}</code>
+                <div class="reveal-hint">Нажмите, чтобы показать</div>
+            </div>
+            <button type="button" class="copy-btn" data-link="{{ link }}" onclick="copyKey(this)">Скопировать</button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="db-card">
+    <h3>Как подключить</h3>
+
+    <div class="app-instructions">
+        <h4>Happ</h4>
+        <p class="db-muted">1. Установите приложение Happ.<br>2. Отсканируйте QR-код выше или вставьте ключ через "Добавить профиль по ссылке".<br>3. Нажмите "Подключиться".</p>
+    </div>
+
+    <div class="app-instructions">
+        <h4>Hiddify</h4>
+        <p class="db-muted">1. Установите Hiddify.<br>2. Импортируйте профиль по ссылке (кнопка "+" → "Импорт из буфера обмена").<br>3. Выберите профиль и нажмите "Подключиться".</p>
+    </div>
+</div>
+
+<script>
+async function copyKey(btn) {
+    const link = btn.getAttribute("data-link");
+    try {
+        await navigator.clipboard.writeText(link);
+        const original = btn.textContent;
+        btn.textContent = "Скопировано!";
+        setTimeout(() => { btn.textContent = original; }, 1500);
+    } catch (e) {
+        // Фолбэк для старых браузеров/контекстов без Clipboard API
+        const ta = document.createElement("textarea");
+        ta.value = link;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        btn.textContent = "Скопировано!";
+        setTimeout(() => { btn.textContent = "Скопировать"; }, 1500);
+    }
+}
+</script>
+{% endblock %}

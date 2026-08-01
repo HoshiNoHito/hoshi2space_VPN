@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block db_content %}
+<h2>Тариф</h2>
+
+<div class="db-card">
+    {% if message %}<p class="hint-ok">{{ message }}</p>{% endif %}
+
+    <p>Текущий тариф:
+        <strong>
+        {% if user.subscription and user.subscription.is_active and user.subscription.plan %}
+            {{ user.subscription.plan.name }}
+        {% else %}
+            не активен
+        {% endif %}
+        </strong>
+    </p>
+
+    <h3>Сменить тариф</h3>
+    <form method="post" action="/dashboard/plan/change">
+        {% for plan in plans %}
+        <label class="plan-option">
+            <input type="radio" name="plan_id" value="{{ plan.id }}"
+                {% if user.subscription and user.subscription.plan_id == plan.id %}checked{% endif %}>
+            {{ plan.name }}
+        </label>
+        {% endfor %}
+        <button type="submit">Применить тариф</button>
+    </form>
+
+    {% if user.subscription and user.subscription.is_active %}
+    <h3>Отключить подписку</h3>
+    <p class="db-muted">VPN-доступ будет приостановлен. Списания (когда появится оплата) прекратятся.</p>
+    <form method="post" action="/dashboard/plan/cancel">
+        <button type="submit" class="btn-danger">Отключить подписку</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

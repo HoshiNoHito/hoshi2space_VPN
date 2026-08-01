@@ -16,6 +16,8 @@ class User(Base):
     nickname_lower = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
+    phone = Column(String, nullable=True)
+    avatar_color = Column(String, default="#5b8cff")
     is_admin = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 

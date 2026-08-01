@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="db-layout">
+    <button class="db-mobile-toggle" onclick="document.querySelector('.db-sidebar').classList.toggle('open')">☰ Меню</button>
+
+    <aside class="db-sidebar">
+        <div class="db-avatar" style="background: {{ user.avatar_color }}">{{ user.nickname[0] | upper }}</div>
+        <div class="db-nickname">{{ user.nickname }}</div>
+
+        <nav class="db-nav">
+            <a href="/dashboard" class="{{ 'active' if active_page == 'home' }}">Главная</a>
+            <a href="/dashboard/account" class="{{ 'active' if active_page == 'account' }}">Аккаунт</a>
+            <a href="/dashboard/plan" class="{{ 'active' if active_page == 'plan' }}">Тариф</a>
+            <a href="/dashboard/keys" class="{{ 'active' if active_page == 'keys' }}">Ключи подключения</a>
+            <a href="/dashboard/stats" class="{{ 'active' if active_page == 'stats' }}">Статистика</a>
+            <a href="/dashboard/support" class="{{ 'active' if active_page == 'support' }}">Поддержка</a>
+        </nav>
+    </aside>
+
+    <section class="db-content">
+        {% block db_content %}{% endblock %}
+    </section>
+</div>
+{% endblock %}

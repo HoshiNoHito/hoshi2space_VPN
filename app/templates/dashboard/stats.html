@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block db_content %}
+<h2>Статистика</h2>
+
+<div class="db-card">
+    <h3>Трафик</h3>
+    {% if traffic.used_bytes is defined %}
+        <p>Использовано: {{ (traffic.used_bytes / 1073741824) | round(2) }} ГБ</p>
+        {% if traffic.total_bytes and traffic.total_bytes > 0 %}
+            <p>Лимит: {{ (traffic.total_bytes / 1073741824) | round(2) }} ГБ</p>
+        {% else %}
+            <p>Лимит: безлимит</p>
+        {% endif %}
+    {% else %}
+        <p class="db-muted">Статистика пока недоступна</p>
+    {% endif %}
+    <p class="db-muted">График трафика за месяц появится позже — данные копятся с сегодняшнего дня.</p>
+</div>
+
+<div class="db-card">
+    <h3>Подписка</h3>
+    <p>Суммарно оплаченных дней: <strong>{{ days_subscribed }}</strong></p>
+    <p class="db-muted">Начнёт считаться корректно после подключения оплаты.</p>
+</div>
+{% endblock %}
