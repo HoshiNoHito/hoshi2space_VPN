@@ -4,31 +4,37 @@
 <div class="auth-wrap">
 <div class="auth-card">
 <h2>Регистрация</h2>
-<form method="post" action="/register" novalidate>
+<form method="post" action="/register" novalidate id="register-form">
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
     <label for="nickname">Никнейм</label>
-    <input type="text" id="nickname" name="nickname" value="{{ nickname }}" required
-           pattern="[a-zA-Z0-9._-]{3,32}"
-           title="Латинские буквы, цифры, точка, дефис, подчёркивание — от 3 до 32 символов">
+    <input type="text" id="nickname" name="nickname" value="{{ nickname }}" required autocomplete="off">
+    <p class="field-hint" id="nickname-hint">Латинские буквы, цифры, точка, дефис, подчёркивание — от 3 до 32 символов</p>
 
     <label for="email">Email</label>
-    <input type="email" id="email" name="email" value="{{ email }}" required>
+    <input type="email" id="email" name="email" value="{{ email }}" required autocomplete="off">
+    <p class="field-hint" id="email-hint"></p>
 
     <label for="password">Пароль</label>
     <div class="field-icon-wrap">
-        <input type="password" id="password" name="password" required minlength="8">
+        <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
         <span class="toggle-eye" onclick="togglePw('password', this)">👁</span>
     </div>
-    <p class="password-rules">Не менее 8 символов: минимум одна заглавная буква, одна цифра и один символ</p>
+    <ul class="password-rules" id="password-rules">
+        <li id="rule-len">Не менее 8 символов</li>
+        <li id="rule-upper">Минимум одна заглавная буква</li>
+        <li id="rule-digit">Минимум одна цифра</li>
+        <li id="rule-symbol">Минимум один символ (например !@#$%)</li>
+    </ul>
 
     <label for="password_confirm">Повторите пароль</label>
     <div class="field-icon-wrap">
-        <input type="password" id="password_confirm" name="password_confirm" required minlength="8">
+        <input type="password" id="password_confirm" name="password_confirm" required minlength="8" autocomplete="new-password">
         <span class="toggle-eye" onclick="togglePw('password_confirm', this)">👁</span>
     </div>
+    <p class="field-hint" id="confirm-hint"></p>
 
-    <button type="submit">Зарегистрироваться</button>
+    <button type="submit" id="submit-btn">Зарегистрироваться</button>
 </form>
 <p class="auth-switch">Уже есть аккаунт? <a href="/login">Войти</a></p>
 </div>
@@ -39,5 +45,92 @@ function togglePw(id, el) {
     const input = document.getElementById(id);
     input.type = (input.type === "password") ? "text" : "password";
 }
+
+function debounce(fn, delay) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    };
+}
+
+function setHint(el, ok, message) {
+    el.textContent = message;
+    el.classList.remove("ok", "bad");
+    if (message) el.classList.add(ok ? "ok" : "bad");
+}
+
+// --- Никнейм: живая проверка занятости на сервере ---
+const nicknameInput = document.getElementById("nickname");
+const nicknameHint = document.getElementById("nickname-hint");
+let nicknameOk = false;
+
+const NICKNAME_DEFAULT_HINT = "Латинские буквы, цифры, точка, дефис, подчёркивание — от 3 до 32 символов";
+
+const checkNickname = debounce(async (value) => {
+    if (!value) {
+        nicknameHint.textContent = NICKNAME_DEFAULT_HINT;
+        nicknameHint.classList.remove("ok", "bad");
+        nicknameOk = false;
+        return;
+    }
+    try {
+        const resp = await fetch("/check-nickname?value=" + encodeURIComponent(value));
+        const data = await resp.json();
+        setHint(nicknameHint, data.available, data.message);
+        nicknameOk = data.available;
+    } catch (e) { /* тихо игнорируем сетевые сбои, финальная проверка всё равно на сервере */ }
+}, 400);
+
+nicknameInput.addEventListener("input", (e) => checkNickname(e.target.value));
+
+// --- Email: живая проверка занятости на сервере ---
+const emailInput = document.getElementById("email");
+const emailHint = document.getElementById("email-hint");
+let emailOk = false;
+
+const checkEmail = debounce(async (value) => {
+    if (!value || !value.includes("@")) { setHint(emailHint, false, ""); emailOk = false; return; }
+    try {
+        const resp = await fetch("/check-email?value=" + encodeURIComponent(value));
+        const data = await resp.json();
+        setHint(emailHint, data.available, data.message);
+        emailOk = data.available;
+    } catch (e) { /* тихо игнорируем */ }
+}, 400);
+
+emailInput.addEventListener("input", (e) => checkEmail(e.target.value));
+
+// --- Пароль: живая проверка правил в браузере ---
+const passwordInput = document.getElementById("password");
+const confirmInput = document.getElementById("password_confirm");
+const confirmHint = document.getElementById("confirm-hint");
+
+function checkPasswordRules() {
+    const value = passwordInput.value;
+    const rules = [
+        { id: "rule-len", pass: value.length >= 8 },
+        { id: "rule-upper", pass: /[A-Z]/.test(value) },
+        { id: "rule-digit", pass: /[0-9]/.test(value) },
+        { id: "rule-symbol", pass: /[^a-zA-Z0-9]/.test(value) },
+    ];
+    let allOk = true;
+    rules.forEach(r => {
+        const el = document.getElementById(r.id);
+        el.classList.remove("ok", "bad");
+        if (value.length > 0) el.classList.add(r.pass ? "ok" : "bad");
+        if (!r.pass) allOk = false;
+    });
+    return allOk;
+}
+
+function checkConfirm() {
+    if (!confirmInput.value) { setHint(confirmHint, false, ""); return; }
+    const match = confirmInput.value === passwordInput.value;
+    setHint(confirmHint, match, match ? "Пароли совпадают" : "Пароли не совпадают");
+}
+
+passwordInput.addEventListener("input", () => { checkPasswordRules(); checkConfirm(); });
+confirmInput.addEventListener("input", checkConfirm);
 </script>
 {% endblock %}

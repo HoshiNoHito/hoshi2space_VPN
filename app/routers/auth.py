@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends, Form
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,28 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 DEFAULT_PLAN_NAME = "Lite"  # тариф по умолчанию при регистрации (пока без оплаты)
+
+
+@router.get("/check-nickname")
+def check_nickname(value: str, db: Session = Depends(get_db)):
+    error = validate_nickname(value)
+    if error:
+        return JSONResponse({"available": False, "message": error})
+
+    exists = db.query(User).filter(User.nickname_lower == value.lower()).first()
+    if exists:
+        return JSONResponse({"available": False, "message": "Этот никнейм уже занят"})
+
+    return JSONResponse({"available": True, "message": "Никнейм свободен"})
+
+
+@router.get("/check-email")
+def check_email(value: str, db: Session = Depends(get_db)):
+    exists = db.query(User).filter(func.lower(User.email) == value.lower()).first()
+    if exists:
+        return JSONResponse({"available": False, "message": "Этот email уже зарегистрирован"})
+
+    return JSONResponse({"available": True, "message": "Email свободен"})
 
 
 @router.get("/register")
