@@ -3,9 +3,12 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from sqlalchemy import func
+
 from app.database import get_db
 from app.models import User, Plan, UserSubscription, UserClient
 from app.security import hash_password, verify_password
+from app.validators import validate_nickname, validate_password
 from app.xui_client import xui_client
 
 router = APIRouter()
@@ -16,24 +19,51 @@ DEFAULT_PLAN_NAME = "Lite"  # тариф по умолчанию при реги
 
 @router.get("/register")
 def register_form(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request, "error": None})
+    return templates.TemplateResponse(
+        "register.html", {"request": request, "error": None, "nickname": "", "email": ""}
+    )
 
 
 @router.post("/register")
 def register(
     request: Request,
+    nickname: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
+    password_confirm: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    existing = db.query(User).filter(User.email == email).first()
-    if existing:
+    def error_page(message: str):
         return templates.TemplateResponse(
             "register.html",
-            {"request": request, "error": "Пользователь с таким email уже существует"},
+            {"request": request, "error": message, "nickname": nickname, "email": email},
         )
 
-    user = User(email=email, password_hash=hash_password(password))
+    nickname_error = validate_nickname(nickname)
+    if nickname_error:
+        return error_page(nickname_error)
+
+    password_error = validate_password(password)
+    if password_error:
+        return error_page(password_error)
+
+    if password != password_confirm:
+        return error_page("Пароли не совпадают")
+
+    nickname_lower = nickname.lower()
+
+    if db.query(User).filter(User.nickname_lower == nickname_lower).first():
+        return error_page("Этот никнейм уже занят")
+
+    if db.query(User).filter(User.email == email).first():
+        return error_page("Пользователь с таким email уже существует")
+
+    user = User(
+        nickname=nickname,
+        nickname_lower=nickname_lower,
+        email=email,
+        password_hash=hash_password(password),
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -52,8 +82,6 @@ def register(
             db.commit()
         except Exception:
             # Панель может быть временно недоступна — не роняем регистрацию.
-            # Пользователь попадёт в кабинет без подключений, это будет видно
-            # и можно будет донастроить вручную/повторить позже.
             pass
 
     request.session["user_id"] = user.id
@@ -62,21 +90,28 @@ def register(
 
 @router.get("/login")
 def login_form(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request, "error": None})
+    return templates.TemplateResponse("login.html", {"request": request, "error": None, "identifier": ""})
 
 
 @router.post("/login")
 def login(
     request: Request,
-    email: str = Form(...),
+    identifier: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    user = db.query(User).filter(User.email == email).first()
+    identifier_lower = identifier.strip().lower()
+
+    user = (
+        db.query(User)
+        .filter((func.lower(User.email) == identifier_lower) | (User.nickname_lower == identifier_lower))
+        .first()
+    )
+
     if not user or not verify_password(password, user.password_hash):
         return templates.TemplateResponse(
             "login.html",
-            {"request": request, "error": "Неверный email или пароль"},
+            {"request": request, "error": "Неверные данные для входа", "identifier": identifier},
         )
 
     request.session["user_id"] = user.id

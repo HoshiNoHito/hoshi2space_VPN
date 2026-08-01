@@ -96,10 +96,6 @@ main {
 .plan-card h3 { margin-top: 0; }
 
 form {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 30px;
     max-width: 380px;
 }
 
@@ -152,3 +148,72 @@ footer {
     padding: 30px;
     font-size: 0.85rem;
 }
+
+/* --- Формы регистрации/входа --- */
+:root {
+    --teal: #2dd4bf;
+}
+
+.auth-wrap {
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+}
+
+.auth-card {
+    background: var(--surface);
+    border: 1px solid var(--teal);
+    border-radius: 16px;
+    padding: 34px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.15), 0 0 40px rgba(45, 212, 191, 0.18);
+}
+
+.auth-card h2 {
+    margin-top: 0;
+    text-align: center;
+}
+
+.field-icon-wrap {
+    position: relative;
+}
+
+.field-icon-wrap input {
+    padding-right: 42px;
+}
+
+.toggle-eye {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--muted);
+    user-select: none;
+    font-size: 0.95rem;
+}
+.toggle-eye:hover { color: var(--text); }
+
+.password-rules {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin: -10px 0 16px 0;
+    line-height: 1.4;
+}
+
+.field-hint {
+    font-size: 0.8rem;
+    margin: -10px 0 16px 0;
+}
+.field-hint.ok { color: #4ade80; }
+.field-hint.bad { color: #ff6b6b; }
+
+.auth-switch {
+    text-align: center;
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+.auth-switch a { color: var(--teal); text-decoration: none; }
+.auth-switch a:hover { text-decoration: underline; }

@@ -1,13 +1,31 @@
 {% extends "base.html" %}
 {% block title %}Вход{% endblock %}
 {% block content %}
+<div class="auth-wrap">
+<div class="auth-card">
 <h2>Вход</h2>
-<form method="post" action="/login">
+<form method="post" action="/login" novalidate>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    <label for="email">Email</label>
-    <input type="email" id="email" name="email" required>
+
+    <label for="identifier">Email или никнейм</label>
+    <input type="text" id="identifier" name="identifier" value="{{ identifier }}" required>
+
     <label for="password">Пароль</label>
-    <input type="password" id="password" name="password" required>
+    <div class="field-icon-wrap">
+        <input type="password" id="password" name="password" required>
+        <span class="toggle-eye" onclick="togglePw('password', this)">👁</span>
+    </div>
+
     <button type="submit">Войти</button>
 </form>
+<p class="auth-switch">Ещё нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+</div>
+</div>
+
+<script>
+function togglePw(id, el) {
+    const input = document.getElementById(id);
+    input.type = (input.type === "password") ? "text" : "password";
+}
+</script>
 {% endblock %}

@@ -1,13 +1,43 @@
 {% extends "base.html" %}
 {% block title %}Регистрация{% endblock %}
 {% block content %}
+<div class="auth-wrap">
+<div class="auth-card">
 <h2>Регистрация</h2>
-<form method="post" action="/register">
+<form method="post" action="/register" novalidate>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+    <label for="nickname">Никнейм</label>
+    <input type="text" id="nickname" name="nickname" value="{{ nickname }}" required
+           pattern="[a-zA-Z0-9._-]{3,32}"
+           title="Латинские буквы, цифры, точка, дефис, подчёркивание — от 3 до 32 символов">
+
     <label for="email">Email</label>
-    <input type="email" id="email" name="email" required>
+    <input type="email" id="email" name="email" value="{{ email }}" required>
+
     <label for="password">Пароль</label>
-    <input type="password" id="password" name="password" required minlength="8">
+    <div class="field-icon-wrap">
+        <input type="password" id="password" name="password" required minlength="8">
+        <span class="toggle-eye" onclick="togglePw('password', this)">👁</span>
+    </div>
+    <p class="password-rules">Не менее 8 символов: минимум одна заглавная буква, одна цифра и один символ</p>
+
+    <label for="password_confirm">Повторите пароль</label>
+    <div class="field-icon-wrap">
+        <input type="password" id="password_confirm" name="password_confirm" required minlength="8">
+        <span class="toggle-eye" onclick="togglePw('password_confirm', this)">👁</span>
+    </div>
+
     <button type="submit">Зарегистрироваться</button>
 </form>
+<p class="auth-switch">Уже есть аккаунт? <a href="/login">Войти</a></p>
+</div>
+</div>
+
+<script>
+function togglePw(id, el) {
+    const input = document.getElementById(id);
+    input.type = (input.type === "password") ? "text" : "password";
+}
+</script>
 {% endblock %}
