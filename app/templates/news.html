@@ -11,6 +11,7 @@
 <div class="db-card">
     <h3>{{ post.title }}</h3>
     <p class="db-muted"><span class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></span></p>
+    {% if post.image_path %}<img src="/static/{{ post.image_path }}" class="post-image" alt="">{% endif %}
     <p style="white-space: pre-wrap;">{{ post.content }}</p>
 </div>
 {% endfor %}

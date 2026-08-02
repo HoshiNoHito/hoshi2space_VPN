@@ -78,6 +78,7 @@ class NewsPost(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
     content = Column(String, nullable=False)
+    image_path = Column(String, nullable=True)  # относительный путь под /uploads
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
@@ -87,7 +88,8 @@ class DownloadItem(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    download_url = Column(String, nullable=False)
+    file_path = Column(String, nullable=False)       # хранимое имя файла на диске
+    original_filename = Column(String, nullable=False)  # имя, которое увидит пользователь при скачивании
     sort_order = Column(Integer, default=0)
 
 
@@ -97,4 +99,5 @@ class FaqItem(Base):
     id = Column(Integer, primary_key=True)
     question = Column(String, nullable=False)
     answer = Column(String, nullable=False)
+    image_path = Column(String, nullable=True)  # относительный путь под /uploads
     sort_order = Column(Integer, default=0)

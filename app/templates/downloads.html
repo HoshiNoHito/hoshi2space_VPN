@@ -11,7 +11,7 @@
 <div class="db-card">
     <h3>{{ item.title }}</h3>
     <p style="white-space: pre-wrap;">{{ item.description }}</p>
-    <a href="{{ item.download_url }}" class="cta" target="_blank" rel="noopener">Скачать</a>
+    <a href="/downloads/file/{{ item.id }}" class="cta">Скачать ({{ item.original_filename }})</a>
 </div>
 {% endfor %}
 {% endblock %}

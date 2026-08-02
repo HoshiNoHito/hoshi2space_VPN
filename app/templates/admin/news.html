@@ -2,14 +2,19 @@
 {% block admin_content %}
 <h2>Новости</h2>
 
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
 <div class="db-card">
     <h3>Добавить новость</h3>
-    <form method="post" action="/admin/news/create">
+    <form method="post" action="/admin/news/create" enctype="multipart/form-data">
         <label for="title">Заголовок</label>
         <input type="text" id="title" name="title" required>
 
         <label for="content">Текст</label>
         <textarea id="content" name="content" rows="6" required></textarea>
+
+        <label for="image">Картинка (необязательно, до 8 МБ)</label>
+        <input type="file" id="image" name="image" accept="image/*">
 
         <button type="submit">Опубликовать</button>
     </form>
@@ -19,11 +24,22 @@
 <div class="db-card">
     <details>
         <summary><strong>{{ post.title }}</strong> — <span class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></span></summary>
-        <form method="post" action="/admin/news/{{ post.id }}/update" style="margin-top: 16px;">
+        <form method="post" action="/admin/news/{{ post.id }}/update" enctype="multipart/form-data" style="margin-top: 16px;">
             <label>Заголовок</label>
             <input type="text" name="title" value="{{ post.title }}" required>
             <label>Текст</label>
             <textarea name="content" rows="6" required>{{ post.content }}</textarea>
+
+            {% if post.image_path %}
+                <img src="/static/{{ post.image_path }}" class="admin-thumb" alt="">
+                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                    <input type="checkbox" name="remove_image" value="1" style="width: auto; margin: 0;"> Удалить картинку
+                </label>
+            {% endif %}
+
+            <label>{{ "Заменить картинку" if post.image_path else "Добавить картинку" }}</label>
+            <input type="file" name="image" accept="image/*">
+
             <button type="submit">Сохранить</button>
         </form>
         <form method="post" action="/admin/news/{{ post.id }}/delete" onsubmit="return confirm('Удалить эту новость?')">

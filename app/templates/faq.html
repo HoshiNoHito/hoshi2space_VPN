@@ -10,6 +10,7 @@
 {% for item in items %}
 <details class="db-card faq-item">
     <summary>{{ item.question }}</summary>
+    {% if item.image_path %}<img src="/static/{{ item.image_path }}" class="post-image" alt="">{% endif %}
     <p style="white-space: pre-wrap; margin-top: 12px;">{{ item.answer }}</p>
 </details>
 {% endfor %}

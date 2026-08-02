@@ -385,3 +385,6 @@ footer {
 
 .faq-item summary { cursor: pointer; font-weight: 600; }
 .faq-item summary:hover { color: var(--accent); }
+
+.post-image { max-width: 100%; border-radius: 10px; margin: 10px 0; display: block; }
+.admin-thumb { max-width: 200px; border-radius: 8px; margin-bottom: 10px; display: block; }

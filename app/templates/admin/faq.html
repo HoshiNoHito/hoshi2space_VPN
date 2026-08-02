@@ -2,13 +2,17 @@
 {% block admin_content %}
 <h2>FAQ</h2>
 
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
 <div class="db-card">
     <h3>Добавить вопрос</h3>
-    <form method="post" action="/admin/faq/create">
+    <form method="post" action="/admin/faq/create" enctype="multipart/form-data">
         <label>Вопрос</label>
         <input type="text" name="question" required>
         <label>Ответ</label>
         <textarea name="answer" rows="4" required></textarea>
+        <label>Картинка (необязательно, до 8 МБ)</label>
+        <input type="file" name="image" accept="image/*">
         <label>Порядок отображения (меньше — выше)</label>
         <input type="number" name="sort_order" value="0">
         <button type="submit">Добавить</button>
@@ -19,11 +23,22 @@
 <div class="db-card">
     <details>
         <summary><strong>{{ item.question }}</strong></summary>
-        <form method="post" action="/admin/faq/{{ item.id }}/update" style="margin-top: 16px;">
+        <form method="post" action="/admin/faq/{{ item.id }}/update" enctype="multipart/form-data" style="margin-top: 16px;">
             <label>Вопрос</label>
             <input type="text" name="question" value="{{ item.question }}" required>
             <label>Ответ</label>
             <textarea name="answer" rows="4" required>{{ item.answer }}</textarea>
+
+            {% if item.image_path %}
+                <img src="/static/{{ item.image_path }}" class="admin-thumb" alt="">
+                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                    <input type="checkbox" name="remove_image" value="1" style="width: auto; margin: 0;"> Удалить картинку
+                </label>
+            {% endif %}
+
+            <label>{{ "Заменить картинку" if item.image_path else "Добавить картинку" }}</label>
+            <input type="file" name="image" accept="image/*">
+
             <label>Порядок отображения</label>
             <input type="number" name="sort_order" value="{{ item.sort_order }}">
             <button type="submit">Сохранить</button>
