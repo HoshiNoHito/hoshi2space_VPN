@@ -12,3 +12,29 @@ sudo systemctl restart vpnsite
 
 # запрос статуса сайта после перезапуска (убедиться, что active):
 sudo systemctl status vpnsite
+
+
+
+
+### ДОПОЛНИТЕЛЬНОЕ ###
+
+# останавливаем процесс работы сайта:
+sudo systemctl stop vpnsite
+
+# возвращаем процесс работы сайта 
+sudo systemctl start vpnsite
+
+# запрашиваем у системы статус процесса работы сайта
+sudo systemctl status vpnsite
+
+# сносим базу пользователей (БЕЗВОЗВРАТНО). Важно - перед сносом обязательно остановить процесс, а затем вернуть его в работу и проверить статус
+sudo -u deploy rm /home/deploy/vpn-site/data/site.db
+
+# сносим базу новостей/FAQ/дистрибутивов
+sqlite3 /home/deploy/vpn-site/data/site.db "DROP TABLE IF EXISTS news_posts; DROP TABLE IF EXISTS download_items; DROP TABLE IF EXISTS faq_items;"
+
+# пересоздаём окружение и тарифы
+sudo -u deploy bash -c 'source /home/deploy/vpn-site/venv/bin/activate && cd /home/deploy/vpn-site && python seed_plans.py'
+
+# задаём админку для определённого профиля (твой_ник заменить на никнейм созданной на сайте учётки) для доступа к разделу "Админка" на сайте:
+sqlite3 /home/deploy/vpn-site/data/site.db "UPDATE users SET is_admin=1 WHERE nickname_lower='твой_ник';"
