@@ -17,7 +17,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_IMAGE_BYTES = 8 * 1024 * 1024        # 8 МБ на картинку
-MAX_DOWNLOAD_BYTES = 250 * 1024 * 1024   # 250 МБ на файл дистрибутива — учитывай общий объём диска (15 ГБ)
+MAX_DOWNLOAD_BYTES = 400 * 1024 * 1024   # 400 МБ на файл дистрибутива — учитывай общий объём диска (15 ГБ)
 
 
 class UploadTooLarge(Exception):
