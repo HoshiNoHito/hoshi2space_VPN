@@ -82,6 +82,22 @@ class XUIClient:
         resp.raise_for_status()
         return resp.json().get("obj", {})
 
+    def list_all_clients(self) -> list[dict]:
+        """Список всех клиентов панели одним запросом — используем для группы и т.п., без N+1 вызовов."""
+        client = self._get_client()
+        resp = client.get("panel/api/clients/list")
+        resp.raise_for_status()
+        return resp.json().get("obj", [])
+
+    def get_online_emails(self) -> set[str]:
+        """Email'ы клиентов, подключённых прямо сейчас (одним запросом на всех)."""
+        client = self._get_client()
+        resp = client.post("panel/api/clients/onlines")
+        resp.raise_for_status()
+        data = resp.json()
+        obj = data.get("obj", data) if isinstance(data, dict) else data
+        return set(obj or [])
+
     def attach_inbounds(self, email: str, inbound_ids: list[int]) -> dict:
         """Прикрепляет существующего клиента к дополнительным inbound'ам."""
         if not inbound_ids:

@@ -1,0 +1,75 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+<h2>Пользователи</h2>
+
+<div class="users-table-head">
+    <span>№</span>
+    <span>Никнейм</span>
+    <span>Статус</span>
+    <span>В сети</span>
+    <span>Группа</span>
+    <span>Создан</span>
+</div>
+
+{% for row in rows %}
+{% set u = row.user %}
+<div class="db-card users-row-card">
+    <details>
+        <summary class="users-row">
+            <span>✏️ {{ loop.index }}</span>
+            <span>{{ u.nickname }}</span>
+            <span class="{{ 'error' if u.is_blocked else 'hint-ok' }}">{{ "Заблокирован" if u.is_blocked else "Активен" }}</span>
+            <span class="{{ 'hint-ok' if row.online else 'db-muted' }}">{{ "Да" if row.online else "Нет" }}</span>
+            <span>{{ row.group or "—" }}</span>
+            <span class="local-time" data-utc="{{ u.created_at.isoformat() }}Z"></span>
+        </summary>
+
+        <div class="user-card">
+            <div class="user-card-header">
+                <div class="db-avatar" style="background: {{ u.avatar_color }}">{{ u.nickname[0] | upper }}</div>
+                <div>
+                    <p><strong>{{ u.nickname }}</strong></p>
+                    <p class="db-muted">{{ u.email }}</p>
+                    {% if u.phone %}<p class="db-muted">{{ u.phone }}</p>{% endif %}
+                    <p class="db-muted">Регистрация: <span class="local-time" data-utc="{{ u.created_at.isoformat() }}Z"></span></p>
+                </div>
+            </div>
+
+            <h4>Тариф</h4>
+            <form method="post" action="/admin/users/{{ u.id }}/set-plan">
+                <select name="plan_id">
+                    {% for plan in plans %}
+                    <option value="{{ plan.id }}" {% if u.subscription and u.subscription.plan_id == plan.id %}selected{% endif %}>{{ plan.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Применить тариф</button>
+            </form>
+
+            <h4>Блокировка</h4>
+            {% if u.is_blocked %}
+                <p>Текущая причина: {{ u.block_reason or "не указана" }}</p>
+                <form method="post" action="/admin/users/{{ u.id }}/unblock">
+                    <button type="submit">Разблокировать</button>
+                </form>
+            {% else %}
+                <form method="post" action="/admin/users/{{ u.id }}/block">
+                    <label>Причина блокировки (покажется пользователю)</label>
+                    <textarea name="reason" rows="2" placeholder="например: неоплата подписки"></textarea>
+                    <button type="submit" class="btn-danger">Заблокировать</button>
+                </form>
+            {% endif %}
+
+            {% if is_root and not u.is_root_admin %}
+            <h4>Права администратора</h4>
+            <form method="post" action="/admin/users/{{ u.id }}/toggle-admin"
+                  onsubmit="return confirm('{{ 'Снять права администратора у ' if u.is_admin else 'Назначить администратором ' }}{{ u.nickname }}?')">
+                <button type="submit" class="{{ 'btn-danger' if u.is_admin else '' }}">
+                    {{ "Снять права админа" if u.is_admin else "Назначить админом" }}
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </details>
+</div>
+{% endfor %}
+{% endblock %}

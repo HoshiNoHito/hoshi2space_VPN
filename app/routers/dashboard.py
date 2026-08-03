@@ -2,16 +2,17 @@ import io
 
 import qrcode
 from fastapi import APIRouter, Request, Depends, Form
-from fastapi.responses import StreamingResponse, RedirectResponse
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.constants import AVATAR_COLORS
 from app.database import get_db
 from app.deps import get_current_user
-from app.models import User, Plan, UserSubscription, UserClient
+from app.models import User, Plan
 from app.validators import validate_nickname
 from app.xui_client import xui_client
+from app.subscription_service import change_plan, cancel_plan
 from app.templates_env import templates
 
 router = APIRouter()
@@ -115,77 +116,41 @@ def plan_change(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    new_plan = db.query(Plan).filter(Plan.id == plan_id).first()
     plans = db.query(Plan).all()
+    new_plan = db.query(Plan).filter(Plan.id == plan_id).first()
     if not new_plan:
         return render(request, "plan", user, {"plans": plans, "message": "Тариф не найден"})
 
-    old_ids = set()
-    if user.subscription and user.subscription.plan:
-        old_ids = set(user.subscription.plan.inbound_ids or [])
-    new_ids = set(new_plan.inbound_ids or [])
-
-    to_attach = list(new_ids - old_ids)
-    to_detach = list(old_ids - new_ids)
-
-    if not user.client:
-        # Клиента ещё нет в 3x-ui (например, при первой активации после отмены) — создаём заново
-        try:
-            xui_client.add_client(email=user.email, inbound_ids=list(new_ids))
-            db.add(UserClient(user_id=user.id, xui_email=user.email))
-        except Exception:
-            return render(request, "plan", user, {"plans": plans, "message": "Не удалось подключиться к панели VPN, попробуйте позже"})
-    else:
-        try:
-            if to_attach:
-                xui_client.attach_inbounds(user.client.xui_email, to_attach)
-            if to_detach:
-                xui_client.detach_inbounds(user.client.xui_email, to_detach)
-        except Exception:
-            return render(request, "plan", user, {"plans": plans, "message": "Не удалось обновить подключения в панели VPN, попробуйте позже"})
-
-    if user.subscription:
-        user.subscription.plan_id = new_plan.id
-        user.subscription.is_active = True
-    else:
-        db.add(UserSubscription(user_id=user.id, plan_id=new_plan.id, is_active=True))
-
-    db.commit()
-    return render(request, "plan", user, {"plans": plans, "message": f"Тариф изменён на {new_plan.name}"})
+    error = change_plan(db, user, new_plan)
+    message = error or f"Тариф изменён на {new_plan.name}"
+    return render(request, "plan", user, {"plans": plans, "message": message})
 
 
 @router.post("/dashboard/plan/cancel")
 def plan_cancel(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     plans = db.query(Plan).all()
-
-    if user.subscription and user.subscription.plan and user.client:
-        old_ids = list(user.subscription.plan.inbound_ids or [])
-        try:
-            xui_client.detach_inbounds(user.client.xui_email, old_ids)
-        except Exception:
-            return render(request, "plan", user, {"plans": plans, "message": "Не удалось отключить VPN-доступ в панели, попробуйте позже"})
-
-    if user.subscription:
-        user.subscription.is_active = False
-        db.commit()
-
-    return render(request, "plan", user, {"plans": plans, "message": "Подписка отключена. VPN-доступ приостановлен."})
+    error = cancel_plan(db, user)
+    message = error or "Подписка отключена. VPN-доступ приостановлен."
+    return render(request, "plan", user, {"plans": plans, "message": message})
 
 
 @router.get("/dashboard/keys")
 def keys_page(request: Request, user: User = Depends(get_current_user)):
+    if user.is_blocked:
+        return render(request, "keys", user, {"links": [], "blocked": True})
+
     links: list[str] = []
     if user.client:
         try:
             links = xui_client.get_client_links(user.client.xui_email)
         except Exception:
             links = []
-    return render(request, "keys", user, {"links": links})
+    return render(request, "keys", user, {"links": links, "blocked": False})
 
 
 @router.get("/dashboard/qr")
 def client_qr(index: int = 0, user: User = Depends(get_current_user)):
-    if not user.client:
+    if not user.client or user.is_blocked:
         return StreamingResponse(io.BytesIO(b""), media_type="image/png")
     try:
         links = xui_client.get_client_links(user.client.xui_email)

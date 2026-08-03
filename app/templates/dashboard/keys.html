@@ -2,6 +2,14 @@
 {% block db_content %}
 <h2>Ключи подключения</h2>
 
+{% if blocked %}
+<div class="db-card">
+    <p class="error">Ваш аккаунт был заблокирован по причине:</p>
+    <p>{{ user.block_reason or "причина не указана" }}</p>
+    <p class="db-muted">Обратитесь в поддержку, если считаете это ошибкой.</p>
+</div>
+{% else %}
+
 {% if not links %}
 <div class="db-card"><p>Пока нет активных подключений. Проверьте раздел "Тариф" или обратитесь в поддержку.</p></div>
 {% endif %}
@@ -60,4 +68,5 @@ async function copyKey(btn) {
     }
 }
 </script>
+{% endif %}
 {% endblock %}

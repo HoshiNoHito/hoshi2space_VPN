@@ -19,6 +19,9 @@ class User(Base):
     phone = Column(String, nullable=True)
     avatar_color = Column(String, default="#5b8cff")
     is_admin = Column(Boolean, default=False)
+    is_root_admin = Column(Boolean, default=False)  # только у владельца сайта, может назначать других админов
+    is_blocked = Column(Boolean, default=False)
+    block_reason = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     subscription = relationship(

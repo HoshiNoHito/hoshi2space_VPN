@@ -388,3 +388,40 @@ footer {
 
 .post-image { max-width: 100%; border-radius: 10px; margin: 10px 0; display: block; }
 .admin-thumb { max-width: 200px; border-radius: 8px; margin-bottom: 10px; display: block; }
+
+/* --- Админка: пользователи --- */
+.users-table-head, .users-row {
+    display: grid;
+    grid-template-columns: 60px 1.2fr 1fr 0.8fr 1fr 1fr;
+    gap: 10px;
+    align-items: center;
+}
+.users-table-head {
+    padding: 0 24px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+.users-row { cursor: pointer; list-style: none; }
+.users-row::-webkit-details-marker { display: none; }
+.users-row-card { padding: 16px 24px; }
+
+.user-card { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+.user-card-header { display: flex; gap: 16px; align-items: center; margin-bottom: 20px; }
+.user-card h4 { margin-bottom: 8px; margin-top: 20px; }
+
+select {
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    background: #0b0e14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .users-table-head { display: none; }
+    .users-row { grid-template-columns: 1fr; text-align: left; }
+    .users-row span::before { content: attr(data-label) ": "; color: var(--muted); }
+}

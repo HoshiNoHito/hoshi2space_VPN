@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Request, Depends, Form, File, UploadFile
+from fastapi import APIRouter, Request, Depends, Form, File, UploadFile, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import get_current_admin
-from app.models import User, NewsPost, DownloadItem, FaqItem
+from app.models import User, NewsPost, DownloadItem, FaqItem, Plan
 from app.templates_env import templates
 from app.uploads import save_image, save_download_file, delete_upload_quiet, delete_file_quiet, UploadTooLarge
+from app.subscription_service import change_plan
+from app.xui_client import xui_client
 
 router = APIRouter(prefix="/admin")
 
@@ -229,3 +231,89 @@ def faq_delete(item_id: int, admin: User = Depends(get_current_admin), db: Sessi
         db.delete(item)
         db.commit()
     return RedirectResponse(url="/admin/faq", status_code=303)
+
+
+# --- Пользователи ---
+
+@router.get("/users")
+def users_list(request: Request, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    users = db.query(User).order_by(User.created_at).all()
+    plans = db.query(Plan).all()
+
+    try:
+        online_emails = xui_client.get_online_emails()
+    except Exception:
+        online_emails = set()
+
+    try:
+        all_clients = xui_client.list_all_clients()
+        # ВАЖНО: имя поля группы в ответе панели не удалось проверить вживую —
+        # пробуем оба варианта названия, встречающихся в разных версиях 3x-ui.
+        group_by_email = {c.get("email"): (c.get("group") or c.get("group_name") or "") for c in all_clients}
+    except Exception:
+        group_by_email = {}
+
+    rows = []
+    for u in users:
+        xui_email = u.client.xui_email if u.client else None
+        rows.append({
+            "user": u,
+            "online": bool(xui_email and xui_email in online_emails),
+            "group": group_by_email.get(xui_email, "") if xui_email else "",
+        })
+
+    return templates.TemplateResponse("admin/users.html", {
+        "request": request, "active": "users", "rows": rows, "plans": plans,
+        "is_root": admin.is_root_admin,
+    })
+
+
+@router.post("/users/{user_id}/block")
+def user_block(
+    user_id: int,
+    reason: str = Form(""),
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    u = db.query(User).filter(User.id == user_id).first()
+    if u:
+        u.is_blocked = True
+        u.block_reason = reason or None
+        db.commit()
+    return RedirectResponse(url="/admin/users", status_code=303)
+
+
+@router.post("/users/{user_id}/unblock")
+def user_unblock(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    u = db.query(User).filter(User.id == user_id).first()
+    if u:
+        u.is_blocked = False
+        u.block_reason = None
+        db.commit()
+    return RedirectResponse(url="/admin/users", status_code=303)
+
+
+@router.post("/users/{user_id}/set-plan")
+def user_set_plan(
+    user_id: int,
+    plan_id: int = Form(...),
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    u = db.query(User).filter(User.id == user_id).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id).first()
+    if u and plan:
+        change_plan(db, u, plan)
+    return RedirectResponse(url="/admin/users", status_code=303)
+
+
+@router.post("/users/{user_id}/toggle-admin")
+def user_toggle_admin(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    if not admin.is_root_admin:
+        raise HTTPException(status_code=403, detail="Только главный администратор может назначать админов")
+
+    u = db.query(User).filter(User.id == user_id).first()
+    if u and not u.is_root_admin:
+        u.is_admin = not u.is_admin
+        db.commit()
+    return RedirectResponse(url="/admin/users", status_code=303)
