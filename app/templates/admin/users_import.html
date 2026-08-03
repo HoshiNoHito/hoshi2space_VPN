@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+<h2>Добавить пользователя из 3x-ui</h2>
+<p class="db-muted">Здесь показаны клиенты, которые уже существуют в панели 3x-ui (добавлены вручную), но ещё не привязаны ни к одному аккаунту на сайте. Привязка не меняет их текущие подключения в панели — только даёт им доступ к личному кабинету на сайте.</p>
+
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+{% if not candidates %}
+<div class="db-card"><p>Непривязанных клиентов не найдено — либо все уже привязаны, либо панель недоступна.</p></div>
+{% endif %}
+
+{% for c in candidates %}
+<div class="db-card">
+    <h3>{{ c.email }}</h3>
+    <form method="post" action="/admin/users/import">
+        <input type="hidden" name="xui_email" value="{{ c.email }}">
+
+        <label>Никнейм для сайта</label>
+        <input type="text" name="nickname" required>
+
+        <label>Email для входа на сайт</label>
+        <input type="email" name="email" required>
+
+        <label>Пароль</label>
+        <input type="password" name="password" required minlength="8">
+
+        <label>Тариф (только для учёта на сайте, подключения в панели не меняются)</label>
+        <select name="plan_id">
+            <option value="0">Не назначать</option>
+            {% for plan in plans %}
+            <option value="{{ plan.id }}">{{ plan.name }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Создать аккаунт и привязать</button>
+    </form>
+</div>
+{% endfor %}
+{% endblock %}

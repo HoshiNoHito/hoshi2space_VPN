@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request, Depends, Form, File, UploadFile, HTTPException
 from fastapi.responses import RedirectResponse
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -9,6 +10,9 @@ from app.templates_env import templates
 from app.uploads import save_image, save_download_file, delete_upload_quiet, delete_file_quiet, UploadTooLarge
 from app.subscription_service import change_plan
 from app.xui_client import xui_client
+from app.security import hash_password
+from app.validators import validate_nickname
+from app.models import UserClient, UserSubscription
 
 router = APIRouter(prefix="/admin")
 
@@ -316,4 +320,88 @@ def user_toggle_admin(user_id: int, admin: User = Depends(get_current_admin), db
     if u and not u.is_root_admin:
         u.is_admin = not u.is_admin
         db.commit()
+    return RedirectResponse(url="/admin/users", status_code=303)
+
+
+# --- Импорт пользователей из 3x-ui (клиенты, добавленные вручную в панели) ---
+
+@router.get("/users/import")
+def users_import_page(request: Request, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    linked_emails = {uc.xui_email for uc in db.query(UserClient).all()}
+
+    try:
+        all_clients = xui_client.list_all_clients()
+    except Exception:
+        all_clients = []
+        error = "Не удалось получить список клиентов из панели 3x-ui"
+    else:
+        error = None
+
+    candidates = [c for c in all_clients if c.get("email") and c.get("email") not in linked_emails]
+    plans = db.query(Plan).all()
+
+    return templates.TemplateResponse("admin/users_import.html", {
+        "request": request, "active": "users", "candidates": candidates, "plans": plans, "error": error,
+    })
+
+
+@router.post("/users/import")
+def users_import_create(
+    request: Request,
+    xui_email: str = Form(...),
+    nickname: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    plan_id: int = Form(0),
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    def error_page(message: str):
+        linked_emails = {uc.xui_email for uc in db.query(UserClient).all()}
+        try:
+            all_clients = xui_client.list_all_clients()
+        except Exception:
+            all_clients = []
+        candidates = [c for c in all_clients if c.get("email") and c.get("email") not in linked_emails]
+        plans = db.query(Plan).all()
+        return templates.TemplateResponse("admin/users_import.html", {
+            "request": request, "active": "users", "candidates": candidates, "plans": plans, "error": message,
+        })
+
+    nickname_lower = nickname.lower()
+
+    nick_error = validate_nickname(nickname)
+    if nick_error:
+        return error_page(nick_error)
+
+    if db.query(User).filter(User.nickname_lower == nickname_lower).first():
+        return error_page("Этот никнейм уже занят")
+
+    if db.query(User).filter(func.lower(User.email) == email.lower()).first():
+        return error_page("Этот email уже используется")
+
+    if db.query(UserClient).filter(UserClient.xui_email == xui_email).first():
+        return error_page("Этот клиент 3x-ui уже привязан к другому аккаунту")
+
+    user = User(
+        nickname=nickname,
+        nickname_lower=nickname_lower,
+        email=email,
+        password_hash=hash_password(password),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    # Привязка без вызова 3x-ui — клиент уже существует в панели со своими inbound'ами как есть
+    db.add(UserClient(user_id=user.id, xui_email=xui_email))
+
+    if plan_id:
+        plan = db.query(Plan).filter(Plan.id == plan_id).first()
+        if plan:
+            # Только учётная запись подписки для сайта — inbound'ы клиента не трогаем,
+            # они уже настроены вручную в панели так, как есть
+            db.add(UserSubscription(user_id=user.id, plan_id=plan.id, is_active=True))
+
+    db.commit()
     return RedirectResponse(url="/admin/users", status_code=303)
