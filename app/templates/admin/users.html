@@ -47,6 +47,21 @@
                 <button type="submit">Применить тариф</button>
             </form>
 
+            <h4>Привязка к 3x-ui</h4>
+            <form method="post" action="/admin/users/{{ u.id }}/link-xui">
+                <select name="xui_email">
+                    <option value="">Не привязан</option>
+                    {% if u.client %}
+                    <option value="{{ u.client.xui_email }}" selected>{{ u.client.xui_email }} (текущий)</option>
+                    {% endif %}
+                    {% for e in unlinked_emails %}
+                    <option value="{{ e }}">{{ e }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Сохранить привязку</button>
+            </form>
+            <p class="db-muted">Смена привязки не создаёт и не удаляет клиента в панели — только меняет, к какому существующему клиенту 3x-ui обращается этот аккаунт сайта.</p>
+
             <h4>Блокировка</h4>
             {% if u.is_blocked %}
                 <p>Текущая причина: {{ u.block_reason or "не указана" }}</p>

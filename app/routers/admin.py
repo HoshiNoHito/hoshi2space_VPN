@@ -255,7 +255,11 @@ def users_list(request: Request, admin: User = Depends(get_current_admin), db: S
         # пробуем оба варианта названия, встречающихся в разных версиях 3x-ui.
         group_by_email = {c.get("email"): (c.get("group") or c.get("group_name") or "") for c in all_clients}
     except Exception:
+        all_clients = []
         group_by_email = {}
+
+    linked_emails = {uc.xui_email for uc in db.query(UserClient).all()}
+    unlinked_emails = [c.get("email") for c in all_clients if c.get("email") and c.get("email") not in linked_emails]
 
     rows = []
     for u in users:
@@ -268,7 +272,7 @@ def users_list(request: Request, admin: User = Depends(get_current_admin), db: S
 
     return templates.TemplateResponse("admin/users.html", {
         "request": request, "active": "users", "rows": rows, "plans": plans,
-        "is_root": admin.is_root_admin,
+        "is_root": admin.is_root_admin, "unlinked_emails": unlinked_emails,
     })
 
 
@@ -308,6 +312,36 @@ def user_set_plan(
     plan = db.query(Plan).filter(Plan.id == plan_id).first()
     if u and plan:
         change_plan(db, u, plan)
+    return RedirectResponse(url="/admin/users", status_code=303)
+
+
+@router.post("/users/{user_id}/link-xui")
+def user_link_xui(
+    user_id: int,
+    xui_email: str = Form(""),
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    u = db.query(User).filter(User.id == user_id).first()
+    if not u:
+        return RedirectResponse(url="/admin/users", status_code=303)
+
+    if not xui_email:
+        if u.client:
+            db.delete(u.client)
+            db.commit()
+        return RedirectResponse(url="/admin/users", status_code=303)
+
+    taken = db.query(UserClient).filter(UserClient.xui_email == xui_email, UserClient.user_id != user_id).first()
+    if taken:
+        # Уже привязан к другому аккаунту — молча игнорируем, чтобы не плодить дубли привязки
+        return RedirectResponse(url="/admin/users", status_code=303)
+
+    if u.client:
+        u.client.xui_email = xui_email
+    else:
+        db.add(UserClient(user_id=u.id, xui_email=xui_email))
+    db.commit()
     return RedirectResponse(url="/admin/users", status_code=303)
 
 
