@@ -19,26 +19,39 @@
     </form>
 </div>
 
-{% for item in items %}
-<div class="db-card">
-    <details>
-        <summary><strong>{{ item.title }}</strong> — {{ item.original_filename }}</summary>
-        <form method="post" action="/admin/downloads/{{ item.id }}/update" enctype="multipart/form-data" style="margin-top: 16px;">
-            <label>Название</label>
-            <input type="text" name="title" value="{{ item.title }}" required>
-            <label>Описание / инструкция</label>
-            <textarea name="description" rows="4" required>{{ item.description }}</textarea>
-            <label>Текущий файл: {{ item.original_filename }}</label>
-            <label>Заменить файл (необязательно)</label>
-            <input type="file" name="file">
-            <label>Порядок отображения</label>
-            <input type="number" name="sort_order" value="{{ item.sort_order }}">
-            <button type="submit">Сохранить</button>
-        </form>
-        <form method="post" action="/admin/downloads/{{ item.id }}/delete" onsubmit="return confirm('Удалить?')">
-            <button type="submit" class="btn-danger">Удалить</button>
-        </form>
-    </details>
+{% if items %}
+<div class="editor-list-wrap">
+    <div class="editor-layout">
+        <div class="editor-list">
+            {% for item in items %}
+            <a href="#item-{{ item.id }}">
+                <div class="item-title">{{ item.title }}</div>
+                <div class="item-meta">{{ item.original_filename }}</div>
+            </a>
+            {% endfor %}
+        </div>
+        <div>
+            {% for item in items %}
+            <div class="editor-pane {% if loop.first %}editor-pane-default{% endif %}" id="item-{{ item.id }}">
+                <form method="post" action="/admin/downloads/{{ item.id }}/update" enctype="multipart/form-data">
+                    <label>Название</label>
+                    <input type="text" name="title" value="{{ item.title }}" required>
+                    <label>Описание / инструкция</label>
+                    <textarea name="description" rows="4" required>{{ item.description }}</textarea>
+                    <label>Текущий файл: {{ item.original_filename }}</label>
+                    <label>Заменить файл (необязательно)</label>
+                    <input type="file" name="file">
+                    <label>Порядок отображения</label>
+                    <input type="number" name="sort_order" value="{{ item.sort_order }}">
+                    <button type="submit">Сохранить</button>
+                </form>
+                <form method="post" action="/admin/downloads/{{ item.id }}/delete" onsubmit="return confirm('Удалить?')">
+                    <button type="submit" class="btn-danger">Удалить</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
-{% endfor %}
+{% endif %}
 {% endblock %}

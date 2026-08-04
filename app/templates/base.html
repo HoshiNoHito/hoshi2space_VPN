@@ -9,8 +9,12 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    {% block hero_bg %}{% endblock %}
     <header class="nav">
-        <a href="/" class="logo">hoshi2space</a>
+        <a href="/" class="logo">
+            <span class="logo-mark"><span class="logo-ring logo-ring-1"></span><span class="logo-ring logo-ring-2"></span><span class="logo-dot"></span></span>
+            hoshi<span class="logo-2">2</span>space
+        </a>
 
         <nav class="nav-center">
             <a href="/">hoshi2space</a>
@@ -38,6 +42,11 @@
     </main>
 
     <footer>
+        <div class="footer-brand">
+            <span class="logo-mark logo-mark-sm"><span class="logo-ring logo-ring-1"></span><span class="logo-ring logo-ring-2"></span><span class="logo-dot"></span></span>
+            <span>hoshi2space</span>
+            <span class="footer-tagline">Быстрый и приватный VPN.</span>
+        </div>
         <p>&copy; hoshi2space.ru</p>
     </footer>
 

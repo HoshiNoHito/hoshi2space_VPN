@@ -20,32 +20,45 @@
     </form>
 </div>
 
-{% for post in posts %}
-<div class="db-card">
-    <details>
-        <summary><strong>{{ post.title }}</strong> — <span class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></span></summary>
-        <form method="post" action="/admin/news/{{ post.id }}/update" enctype="multipart/form-data" style="margin-top: 16px;">
-            <label>Заголовок</label>
-            <input type="text" name="title" value="{{ post.title }}" required>
-            <label>Текст</label>
-            <textarea name="content" rows="6" required>{{ post.content }}</textarea>
+{% if posts %}
+<div class="editor-list-wrap">
+    <div class="editor-layout">
+        <div class="editor-list">
+            {% for post in posts %}
+            <a href="#post-{{ post.id }}">
+                <div class="item-title">{{ post.title }}</div>
+                <div class="item-meta"><span class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></span></div>
+            </a>
+            {% endfor %}
+        </div>
+        <div>
+            {% for post in posts %}
+            <div class="editor-pane {% if loop.first %}editor-pane-default{% endif %}" id="post-{{ post.id }}">
+                <form method="post" action="/admin/news/{{ post.id }}/update" enctype="multipart/form-data">
+                    <label>Заголовок</label>
+                    <input type="text" name="title" value="{{ post.title }}" required>
+                    <label>Текст</label>
+                    <textarea name="content" rows="6" required>{{ post.content }}</textarea>
 
-            {% if post.image_path %}
-                <img src="/static/{{ post.image_path }}" class="admin-thumb" alt="">
-                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                    <input type="checkbox" name="remove_image" value="1" style="width: auto; margin: 0;"> Удалить картинку
-                </label>
-            {% endif %}
+                    {% if post.image_path %}
+                        <img src="/static/{{ post.image_path }}" class="admin-thumb" alt="">
+                        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                            <input type="checkbox" name="remove_image" value="1" style="width: auto; margin: 0;"> Удалить картинку
+                        </label>
+                    {% endif %}
 
-            <label>{{ "Заменить картинку" if post.image_path else "Добавить картинку" }}</label>
-            <input type="file" name="image" accept="image/*">
+                    <label>{{ "Заменить картинку" if post.image_path else "Добавить картинку" }}</label>
+                    <input type="file" name="image" accept="image/*">
 
-            <button type="submit">Сохранить</button>
-        </form>
-        <form method="post" action="/admin/news/{{ post.id }}/delete" onsubmit="return confirm('Удалить эту новость?')">
-            <button type="submit" class="btn-danger">Удалить</button>
-        </form>
-    </details>
+                    <button type="submit">Сохранить</button>
+                </form>
+                <form method="post" action="/admin/news/{{ post.id }}/delete" onsubmit="return confirm('Удалить эту новость?')">
+                    <button type="submit" class="btn-danger">Удалить</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
-{% endfor %}
+{% endif %}
 {% endblock %}

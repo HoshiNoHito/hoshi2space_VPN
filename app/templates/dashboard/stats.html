@@ -5,12 +5,16 @@
 <div class="db-card">
     <h3>Трафик</h3>
     {% if traffic.used_bytes is defined %}
-        <p>Использовано: {{ (traffic.used_bytes / 1073741824) | round(2) }} ГБ</p>
-        {% if traffic.total_bytes and traffic.total_bytes > 0 %}
-            <p>Лимит: {{ (traffic.total_bytes / 1073741824) | round(2) }} ГБ</p>
-        {% else %}
-            <p>Лимит: безлимит</p>
-        {% endif %}
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-label">Использовано</div>
+                <div class="stat-value">{{ (traffic.used_bytes / 1073741824) | round(2) }} ГБ</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Лимит</div>
+                <div class="stat-value">{% if traffic.total_bytes and traffic.total_bytes > 0 %}{{ (traffic.total_bytes / 1073741824) | round(2) }} ГБ{% else %}безлимит{% endif %}</div>
+            </div>
+        </div>
     {% else %}
         <p class="db-muted">Статистика пока недоступна</p>
     {% endif %}

@@ -1,20 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="db-layout">
-    <button class="db-mobile-toggle" onclick="document.querySelector('.db-sidebar').classList.toggle('open')">☰ Меню</button>
+<div class="rail-layout">
+    <button class="db-mobile-toggle" onclick="document.querySelector('.rail-nav').classList.toggle('open')">☰ Меню</button>
 
-    <aside class="db-sidebar">
-        <div class="db-nickname">Админка</div>
-        <nav class="db-nav">
-            <a href="/admin" class="{{ 'active' if active == 'home' }}">Обзор</a>
-            <a href="/admin/users" class="{{ 'active' if active == 'users' }}">Пользователи</a>
-            <a href="/admin/news" class="{{ 'active' if active == 'news' }}">Новости</a>
-            <a href="/admin/downloads" class="{{ 'active' if active == 'downloads' }}">Скачать</a>
-            <a href="/admin/faq" class="{{ 'active' if active == 'faq' }}">FAQ</a>
-        </nav>
-    </aside>
+    <nav class="rail-nav">
+        <a href="/admin" class="rail-item {{ 'active' if active == 'home' }}">
+            <span class="rail-icon" style="transform: rotate(45deg);"></span>
+            <span class="rail-label">ОБЗОР</span>
+        </a>
+        <a href="/admin/users" class="rail-item {{ 'active' if active == 'users' }}">
+            <span class="rail-icon" style="border-radius: 50%; width: 10px; height: 10px;"></span>
+            <span class="rail-label">ЛЮДИ</span>
+        </a>
+        <a href="/admin/news" class="rail-item {{ 'active' if active == 'news' }}">
+            <span class="rail-icon" style="border-radius: 3px;"></span>
+            <span class="rail-label">НОВОСТИ</span>
+        </a>
+        <a href="/admin/downloads" class="rail-item {{ 'active' if active == 'downloads' }}">
+            <span class="rail-icon" style="border-radius: 3px 3px 0 0; border-bottom: none;"></span>
+            <span class="rail-label">ФАЙЛЫ</span>
+        </a>
+        <a href="/admin/faq" class="rail-item {{ 'active' if active == 'faq' }}">
+            <span class="rail-icon" style="border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">?</span>
+            <span class="rail-label">FAQ</span>
+        </a>
+    </nav>
 
-    <section class="db-content">
+    <section class="rail-content">
         {% block admin_content %}{% endblock %}
     </section>
 </div>

@@ -17,13 +17,15 @@
 
     <h3>Сменить тариф</h3>
     <form method="post" action="/dashboard/plan/change">
-        {% for plan in plans %}
-        <label class="plan-option">
-            <input type="radio" name="plan_id" value="{{ plan.id }}"
-                {% if user.subscription and user.subscription.plan_id == plan.id %}checked{% endif %}>
-            {{ plan.name }}
-        </label>
-        {% endfor %}
+        <div class="plan-tiles">
+            {% for plan in plans %}
+            <label class="plan-option">
+                <input type="radio" name="plan_id" value="{{ plan.id }}"
+                    {% if user.subscription and user.subscription.plan_id == plan.id %}checked{% endif %}>
+                {{ plan.name }}
+            </label>
+            {% endfor %}
+        </div>
         <button type="submit">Применить тариф</button>
     </form>
 

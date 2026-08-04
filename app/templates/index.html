@@ -1,12 +1,63 @@
 {% extends "base.html" %}
 {% block title %}hoshi2space — VPN{% endblock %}
+{% block hero_bg %}<div class="starfield"></div>{% endblock %}
 {% block content %}
-<section class="hero">
-    <h1>Быстрый и приватный VPN</h1>
-    <p>Надёжное подключение на современных протоколах. Выбери тариф под свои задачи.</p>
-    <a href="/register" class="cta">Начать</a>
-</section>
+<div class="hero-grid">
+    <div class="hero">
+        <span class="hero-badge">VPN-сервис</span>
+        <h1>Быстрый VPN, который просто работает</h1>
+        <p>Приватное подключение для стриминга, работы и обхода блокировок. Без сложных настроек — установили и подключились.</p>
+        <div class="hero-actions">
+            <a href="/register" class="cta">Зарегистрироваться</a>
+            <a href="/downloads" class="cta-secondary">Скачать приложение</a>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="moon-glow"></div>
+        <div class="moon-body"></div>
+        <div class="vignette"></div>
+        <div class="mascot">
+            <div class="mascot-body"></div>
+            <div class="mascot-head"></div>
+            <div class="mascot-laptop"></div>
+        </div>
+    </div>
+</div>
 
+<h2>Почему hoshi2space</h2>
+<div class="feature-grid">
+    <div class="feature-card">
+        <div class="feature-icon"></div>
+        <h3>Скорость</h3>
+        <p>Современные протоколы держат соединение быстрым — видео и звонки без лагов.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"></div>
+        <h3>Надёжность</h3>
+        <p>Стабильное подключение, которое не обрывается при смене сети или Wi-Fi.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"></div>
+        <h3>Техподдержка</h3>
+        <p>Отвечаем быстро в чате и на почте — каждый день, без ботов-заглушек.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"></div>
+        <h3>Честная цена</h3>
+        <p>Понятные тарифы без скрытых платежей и сюрпризов при оплате.</p>
+    </div>
+</div>
+
+<h2>Работает на всех ваших устройствах</h2>
+<div class="platform-row">
+    <span class="platform-pill">Windows</span>
+    <span class="platform-pill">macOS</span>
+    <span class="platform-pill">iOS</span>
+    <span class="platform-pill">Android</span>
+    <span class="platform-pill">Linux</span>
+</div>
+
+<h2>Тарифы под любые задачи</h2>
 <section class="plans">
     <div class="plan-card">
         <h3>Lite</h3>

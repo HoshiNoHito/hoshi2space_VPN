@@ -1,23 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="db-layout">
-    <button class="db-mobile-toggle" onclick="document.querySelector('.db-sidebar').classList.toggle('open')">☰ Меню</button>
+<div class="rail-layout">
+    <button class="db-mobile-toggle" onclick="document.querySelector('.rail-nav').classList.toggle('open')">☰ Меню</button>
 
-    <aside class="db-sidebar">
-        <div class="db-avatar" style="background: {{ user.avatar_color }}">{{ user.nickname[0] | upper }}</div>
-        <div class="db-nickname">{{ user.nickname }}</div>
+    <nav class="rail-nav">
+        <a href="/dashboard" class="rail-item {{ 'active' if active_page == 'home' }}">
+            <span class="rail-icon" style="border-radius: 50%;"></span>
+            <span class="rail-label">ГЛАВНАЯ</span>
+        </a>
+        <a href="/dashboard/account" class="rail-item {{ 'active' if active_page == 'account' }}">
+            <span class="rail-icon" style="border-radius: 50%;"></span>
+            <span class="rail-label">АККАУНТ</span>
+        </a>
+        <a href="/dashboard/plan" class="rail-item {{ 'active' if active_page == 'plan' }}">
+            <span class="rail-icon" style="transform: rotate(45deg);"></span>
+            <span class="rail-label">ТАРИФ</span>
+        </a>
+        <a href="/dashboard/keys" class="rail-item {{ 'active' if active_page == 'keys' }}">
+            <span class="rail-icon" style="border-radius: 50%; width: 10px; height: 10px;"></span>
+            <span class="rail-label">КЛЮЧИ</span>
+        </a>
+        <a href="/dashboard/stats" class="rail-item {{ 'active' if active_page == 'stats' }}">
+            <span class="rail-icon" style="border-radius: 3px;"></span>
+            <span class="rail-label">СТАТС</span>
+        </a>
+        <a href="/dashboard/support" class="rail-item {{ 'active' if active_page == 'support' }}">
+            <span class="rail-icon" style="border-radius: 50%;"></span>
+            <span class="rail-label">ПОМОЩЬ</span>
+        </a>
+        <div class="db-avatar" style="width: 40px; height: 40px; font-size: 1rem; margin: 10px auto 0; background: {{ user.avatar_color }}">{{ user.nickname[0] | upper }}</div>
+    </nav>
 
-        <nav class="db-nav">
-            <a href="/dashboard" class="{{ 'active' if active_page == 'home' }}">Главная</a>
-            <a href="/dashboard/account" class="{{ 'active' if active_page == 'account' }}">Аккаунт</a>
-            <a href="/dashboard/plan" class="{{ 'active' if active_page == 'plan' }}">Тариф</a>
-            <a href="/dashboard/keys" class="{{ 'active' if active_page == 'keys' }}">Ключи подключения</a>
-            <a href="/dashboard/stats" class="{{ 'active' if active_page == 'stats' }}">Статистика</a>
-            <a href="/dashboard/support" class="{{ 'active' if active_page == 'support' }}">Поддержка</a>
-        </nav>
-    </aside>
-
-    <section class="db-content">
+    <section class="rail-content">
         {% block db_content %}{% endblock %}
     </section>
 </div>

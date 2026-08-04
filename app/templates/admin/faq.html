@@ -19,34 +19,46 @@
     </form>
 </div>
 
-{% for item in items %}
-<div class="db-card">
-    <details>
-        <summary><strong>{{ item.question }}</strong></summary>
-        <form method="post" action="/admin/faq/{{ item.id }}/update" enctype="multipart/form-data" style="margin-top: 16px;">
-            <label>Вопрос</label>
-            <input type="text" name="question" value="{{ item.question }}" required>
-            <label>Ответ</label>
-            <textarea name="answer" rows="4" required>{{ item.answer }}</textarea>
+{% if items %}
+<div class="editor-list-wrap">
+    <div class="editor-layout">
+        <div class="editor-list">
+            {% for item in items %}
+            <a href="#item-{{ item.id }}">
+                <div class="item-title">{{ item.question }}</div>
+            </a>
+            {% endfor %}
+        </div>
+        <div>
+            {% for item in items %}
+            <div class="editor-pane {% if loop.first %}editor-pane-default{% endif %}" id="item-{{ item.id }}">
+                <form method="post" action="/admin/faq/{{ item.id }}/update" enctype="multipart/form-data">
+                    <label>Вопрос</label>
+                    <input type="text" name="question" value="{{ item.question }}" required>
+                    <label>Ответ</label>
+                    <textarea name="answer" rows="4" required>{{ item.answer }}</textarea>
 
-            {% if item.image_path %}
-                <img src="/static/{{ item.image_path }}" class="admin-thumb" alt="">
-                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                    <input type="checkbox" name="remove_image" value="1" style="width: auto; margin: 0;"> Удалить картинку
-                </label>
-            {% endif %}
+                    {% if item.image_path %}
+                        <img src="/static/{{ item.image_path }}" class="admin-thumb" alt="">
+                        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                            <input type="checkbox" name="remove_image" value="1" style="width: auto; margin: 0;"> Удалить картинку
+                        </label>
+                    {% endif %}
 
-            <label>{{ "Заменить картинку" if item.image_path else "Добавить картинку" }}</label>
-            <input type="file" name="image" accept="image/*">
+                    <label>{{ "Заменить картинку" if item.image_path else "Добавить картинку" }}</label>
+                    <input type="file" name="image" accept="image/*">
 
-            <label>Порядок отображения</label>
-            <input type="number" name="sort_order" value="{{ item.sort_order }}">
-            <button type="submit">Сохранить</button>
-        </form>
-        <form method="post" action="/admin/faq/{{ item.id }}/delete" onsubmit="return confirm('Удалить?')">
-            <button type="submit" class="btn-danger">Удалить</button>
-        </form>
-    </details>
+                    <label>Порядок отображения</label>
+                    <input type="number" name="sort_order" value="{{ item.sort_order }}">
+                    <button type="submit">Сохранить</button>
+                </form>
+                <form method="post" action="/admin/faq/{{ item.id }}/delete" onsubmit="return confirm('Удалить?')">
+                    <button type="submit" class="btn-danger">Удалить</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
-{% endfor %}
+{% endif %}
 {% endblock %}
