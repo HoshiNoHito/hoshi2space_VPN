@@ -13,13 +13,8 @@ def validate_nickname(nickname: str) -> str | None:
 def validate_password(password: str) -> str | None:
     if len(password) < 8:
         return "Пароль должен содержать не менее 8 символов"
-
-    checks = [
-        bool(re.search(r"[A-Z]", password)),
-        bool(re.search(r"[0-9]", password)),
-        bool(re.search(r"[^a-zA-Z0-9]", password)),
-    ]
-    if sum(checks) < 2:
-        return "Пароль должен содержать минимум 2 из 3: заглавную букву, цифру, символ"
-
+    if not re.search(r"[A-Z]", password):
+        return "Пароль должен содержать минимум одну заглавную букву"
+    if not re.search(r"[0-9]", password):
+        return "Пароль должен содержать минимум одну цифру"
     return None
