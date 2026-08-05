@@ -23,9 +23,12 @@
     </div>
     <ul class="password-rules" id="password-rules">
         <li id="rule-len">Не менее 8 символов</li>
-        <li id="rule-upper">Минимум одна заглавная буква</li>
-        <li id="rule-digit">Минимум одна цифра</li>
-        <li id="rule-symbol">Минимум один символ (например !@#$%)</li>
+    </ul>
+    <p class="field-hint" style="margin: -6px 0 4px 0;">Плюс любые 2 из 3:</p>
+    <ul class="password-rules" id="password-rules-optional">
+        <li id="rule-upper">Заглавная буква</li>
+        <li id="rule-digit">Цифра</li>
+        <li id="rule-symbol">Символ (например !@#$%)</li>
     </ul>
 
     <label for="password_confirm">Повторите пароль</label>
@@ -109,20 +112,25 @@ const confirmHint = document.getElementById("confirm-hint");
 
 function checkPasswordRules() {
     const value = passwordInput.value;
-    const rules = [
-        { id: "rule-len", pass: value.length >= 8 },
+
+    const lenOk = value.length >= 8;
+    const lenEl = document.getElementById("rule-len");
+    lenEl.classList.remove("ok", "bad");
+    if (value.length > 0) lenEl.classList.add(lenOk ? "ok" : "bad");
+
+    const optional = [
         { id: "rule-upper", pass: /[A-Z]/.test(value) },
         { id: "rule-digit", pass: /[0-9]/.test(value) },
         { id: "rule-symbol", pass: /[^a-zA-Z0-9]/.test(value) },
     ];
-    let allOk = true;
-    rules.forEach(r => {
+    let metCount = 0;
+    optional.forEach(r => {
         const el = document.getElementById(r.id);
-        el.classList.remove("ok", "bad");
-        if (value.length > 0) el.classList.add(r.pass ? "ok" : "bad");
-        if (!r.pass) allOk = false;
+        el.classList.remove("ok");
+        if (r.pass) { el.classList.add("ok"); metCount++; }
     });
-    return allOk;
+
+    return lenOk && metCount >= 2;
 }
 
 function checkConfirm() {

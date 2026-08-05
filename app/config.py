@@ -7,8 +7,6 @@ class Settings(BaseSettings):
     xui_panel_url: str = "https://127.0.0.1:2053/"
     xui_api_token: str = ""
 
-    public_server_address: str = "your-server-ip-or-domain"
-
     database_url: str = "sqlite:///./data/site.db"
 
     class Config:
